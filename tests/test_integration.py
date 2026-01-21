@@ -1,7 +1,6 @@
 """Integration tests for lc2mcp."""
 
 from dataclasses import dataclass
-from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
