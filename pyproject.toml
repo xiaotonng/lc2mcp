@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lc2mcp"
+version = "0.1.1"
+description = "Convert LangChain tools to FastMCP tools"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "lc2mcp contributors" }
+]
+keywords = ["langchain", "mcp", "fastmcp", "llm", "tools", "adapter"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "langchain>=1.0.0,<2.0.0",
+    "fastmcp>=2.0.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+community = [
+    "langchain-community>=0.3.0,<1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/lc2mcp/lc2mcp"
+Repository = "https://github.com/lc2mcp/lc2mcp"
+Issues = "https://github.com/lc2mcp/lc2mcp/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lc2mcp"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true

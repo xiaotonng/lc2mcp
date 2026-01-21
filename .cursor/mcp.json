@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "auth-server": {
+      "command": "/Users/admin/Desktop/project/lc2mcp/.venv/bin/python",
+      "args": ["/Users/admin/Desktop/project/lc2mcp/examples/advanced_context.py"]
+    }
+  }
+}
