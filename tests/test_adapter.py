@@ -1,6 +1,5 @@
 """Tests for the core adapter module."""
 
-
 import pytest
 from langchain_core.tools import StructuredTool, tool
 from pydantic import BaseModel

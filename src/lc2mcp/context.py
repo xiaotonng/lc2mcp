@@ -52,11 +52,7 @@ def get_non_injectable_params(func: Callable[..., Any]) -> dict[str, inspect.Par
         A dict of parameter name -> Parameter for non-injectable params.
     """
     sig = inspect.signature(func)
-    return {
-        name: param
-        for name, param in sig.parameters.items()
-        if name not in INJECTABLE_PARAMS
-    }
+    return {name: param for name, param in sig.parameters.items() if name not in INJECTABLE_PARAMS}
 
 
 def filter_schema_properties(

@@ -192,10 +192,14 @@ def to_mcp_tool(
     # Apply overrides
     final_name = name or tool_name
     final_desc = description or tool_desc
-    final_schema: JsonSchemaDict = args_schema or tool_schema or {
-        "type": "object",
-        "properties": {},
-    }
+    final_schema: JsonSchemaDict = (
+        args_schema
+        or tool_schema
+        or {
+            "type": "object",
+            "properties": {},
+        }
+    )
 
     # Detect injectable parameters
     # For StructuredTool, use .coroutine (async) or .func (sync) to get the original function
