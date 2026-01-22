@@ -2,7 +2,7 @@
 Schema conversion utilities for transforming Pydantic models to JSON Schema.
 """
 
-from typing import get_origin
+from typing import Any, get_origin
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, create_model
@@ -16,10 +16,10 @@ try:
     HAS_INJECTED_ARG = True
 except ImportError:
     HAS_INJECTED_ARG = False
-    _DirectlyInjectedToolArg = None
+    _DirectlyInjectedToolArg = None  # type: ignore[misc, assignment]
 
 
-def _is_injected_arg_type(annotation: type) -> bool:
+def _is_injected_arg_type(annotation: Any) -> bool:
     """
     Check if a type annotation is an injected tool argument.
 
@@ -71,7 +71,7 @@ def _filter_injected_fields(model: type[BaseModel]) -> type[BaseModel]:
         return model
 
     # Create a new model with only non-injected fields
-    return create_model(
+    return create_model(  # type: ignore[call-overload, no-any-return]
         f"{model.__name__}Filtered",
         **fields_to_keep,
     )

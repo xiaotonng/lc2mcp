@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from typing import TYPE_CHECKING, Any, Callable, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Sequence, cast
 
 from pydantic import Field, create_model
 
@@ -79,10 +79,11 @@ def _extract_tool_info(tool: LangChainTool) -> tuple[str, str, JsonSchemaDict | 
     # Handle @tool decorated functions (they become BaseTool instances)
     # But if passed as callable, extract from function metadata
     if callable(tool):
-        name = getattr(tool, "name", None) or getattr(tool, "__name__", "unknown_tool")
-        description = getattr(tool, "description", None) or tool.__doc__ or ""
+        raw_name = getattr(tool, "name", None) or getattr(tool, "__name__", "unknown_tool")
+        func_name = cast(str, raw_name)
+        func_desc = cast(str, getattr(tool, "description", None) or tool.__doc__ or "")
         schema = extract_schema_from_tool(tool)
-        return name, description, schema
+        return func_name, func_desc, schema
 
     raise TypeError(f"Expected BaseTool or callable, got {type(tool)}")
 
@@ -221,9 +222,9 @@ def to_mcp_tool(
     # Attach metadata for FastMCP
     wrapper.__name__ = final_name
     wrapper.__doc__ = final_desc
-    wrapper._mcp_tool_schema = final_schema
-    wrapper._mcp_tool_name = final_name
-    wrapper._mcp_tool_description = final_desc
+    setattr(wrapper, "_mcp_tool_schema", final_schema)
+    setattr(wrapper, "_mcp_tool_name", final_name)
+    setattr(wrapper, "_mcp_tool_description", final_desc)
 
     return wrapper
 
@@ -273,7 +274,7 @@ def register_tools(
         )
 
         # Get the tool name and apply prefix
-        tool_name = wrapped._mcp_tool_name
+        tool_name: str = getattr(wrapped, "_mcp_tool_name")
         prefixed_name = apply_prefix(tool_name, name_prefix)
 
         # Resolve conflicts
@@ -281,7 +282,7 @@ def register_tools(
 
         # Update wrapper with final name
         wrapped.__name__ = final_name
-        wrapped._mcp_tool_name = final_name
+        setattr(wrapped, "_mcp_tool_name", final_name)
 
         # Get schema and description
         schema: JsonSchemaDict = getattr(
@@ -301,7 +302,7 @@ def register_tools(
     return registered_names
 
 
-def _json_type_to_python(json_type: str | list[str], prop_schema: JsonSchemaDict) -> type:
+def _json_type_to_python(json_type: str | list[str], prop_schema: JsonSchemaDict) -> Any:
     """Convert JSON Schema type to Python type."""
     if isinstance(json_type, list):
         # Handle nullable types like ["string", "null"]
@@ -339,7 +340,7 @@ def _create_pydantic_model_from_schema(
     properties: dict[str, JsonSchemaDict] = schema.get("properties", {})
     required_fields: set[str] = set(schema.get("required", []))
 
-    field_definitions: dict[str, tuple[type, Any]] = {}
+    field_definitions: dict[str, tuple[Any, Any]] = {}
     for field_name, field_schema in properties.items():
         field_type = _json_type_to_python(
             field_schema.get("type", "string"),
@@ -367,7 +368,7 @@ def _create_pydantic_model_from_schema(
     # Create a valid Python identifier for the model name
     model_name = "".join(c if c.isalnum() else "_" for c in name).strip("_") + "Args"
 
-    return create_model(model_name, **field_definitions)
+    return create_model(model_name, **field_definitions)  # type: ignore[call-overload, no-any-return]
 
 
 def _register_single_tool(
