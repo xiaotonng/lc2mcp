@@ -78,6 +78,44 @@ Your tool is now available to Claude, Cursor, and any MCP client.
 
 ---
 
+## 🔄 lc2mcp vs langchain-mcp-adapters
+
+LangChain and MCP ecosystems can be connected in **both directions**:
+
+| Direction | Tool | Description |
+|-----------|------|-------------|
+| **LangChain → MCP** | `lc2mcp` ✅ | Convert LangChain tools to MCP tools (this project) |
+| **MCP → LangChain** | [`langchain-mcp-adapters`](https://github.com/langchain-ai/langchain-mcp-adapters) | Convert MCP tools to LangChain tools (official) |
+
+**When to use `lc2mcp`:**
+- You have existing LangChain tools and want to expose them via MCP
+- You want to build an MCP server using LangChain's rich tool ecosystem
+- You need to serve tools to Claude, Cursor, or other MCP clients
+
+**When to use `langchain-mcp-adapters`:**
+- You have MCP servers and want to use them in LangChain agents
+- You want to call MCP tools from LangGraph workflows
+
+**Using both together:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Your Application                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   LangChain Tools ──── lc2mcp ────▶ MCP Server ──▶ MCP Clients │
+│         │                              │          (Claude, etc) │
+│         │                              │                        │
+│         ▼                              ▼                        │
+│   LangChain Agent ◀── langchain-mcp-adapters ─── MCP Tools     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Both libraries are complementary and can be used together to build powerful AI applications that bridge the LangChain and MCP ecosystems.
+
+---
+
 ## 📚 Examples
 
 ### Using Community Tools
