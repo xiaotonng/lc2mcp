@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lc2mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "Convert LangChain tools to FastMCP tools"
 readme = "README.md"
 license = "MIT"
