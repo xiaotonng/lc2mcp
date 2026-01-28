@@ -54,6 +54,41 @@ if __name__ == "__main__":
 
 Your tool is now available to Claude, Cursor, and any MCP client.
 
+### Tool Parameter Descriptions
+
+To include parameter descriptions in the MCP tool schema, you have two options:
+
+**Option 1: Use `parse_docstring=True`** (Recommended for simplicity)
+
+```python
+@tool(parse_docstring=True)
+def get_weather(city: str, unit: str = "celsius") -> str:
+    """Get current weather for a city.
+
+    Args:
+        city: The name of the city to query
+        unit: Temperature unit (celsius or fahrenheit)
+    """
+    return f"Sunny, 25°C in {city}"
+```
+
+**Option 2: Use `args_schema`** (Recommended for complex types)
+
+```python
+from pydantic import BaseModel, Field
+
+class WeatherInput(BaseModel):
+    city: str = Field(description="The name of the city to query")
+    unit: str = Field(default="celsius", description="Temperature unit")
+
+@tool(args_schema=WeatherInput)
+def get_weather(city: str, unit: str = "celsius") -> str:
+    """Get current weather for a city."""
+    return f"Sunny, 25°C in {city}"
+```
+
+> **Note:** Without `parse_docstring=True` or `args_schema`, parameter descriptions from docstrings will not be extracted.
+
 ---
 
 ## 🔌 How It Works
@@ -281,6 +316,8 @@ to_mcp_tool(
 | Tool Type | Status |
 |-----------|--------|
 | `@tool` decorated functions | ✅ Full support |
+| `@tool(parse_docstring=True)` | ✅ Full support (with parameter descriptions) |
+| `@tool(args_schema=...)` | ✅ Full support (with parameter descriptions) |
 | `StructuredTool` | ✅ Full support |
 | `BaseTool` subclasses | ✅ Supported (requires `args_schema`) |
 
