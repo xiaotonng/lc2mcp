@@ -12,10 +12,9 @@ Test cases for Issue #2: 验证 register_tools 是否能正确解析 @tool 的�
 - lc2mcp 正确传递 LangChain 工具的 schema，无需额外处理
 """
 
-import pytest
-from pydantic import BaseModel, Field
-from langchain_core.tools import tool, StructuredTool
 from fastmcp import FastMCP
+from langchain_core.tools import StructuredTool, tool
+from pydantic import BaseModel, Field
 
 from lc2mcp import register_tools
 from lc2mcp.schema import extract_schema_from_tool
@@ -124,7 +123,8 @@ class TestGoogleDocstringExtraction:
         unit_desc = schema["properties"]["unit"].get("description")
 
         assert city_desc == "城市名称", f"Expected '城市名称', got {city_desc}"
-        assert unit_desc == "温度单位，默认为摄氏度", f"Expected '温度单位，默认为摄氏度', got {unit_desc}"
+        expected_unit = "温度单位，默认为摄氏度"
+        assert unit_desc == expected_unit, f"Expected '{expected_unit}', got {unit_desc}"
 
 
 class TestSimpleAnnotationExtraction:
