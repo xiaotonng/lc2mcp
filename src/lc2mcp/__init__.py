@@ -17,7 +17,7 @@ from lc2mcp.types import (
     ToolRuntime,
 )
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __all__ = [
     # Core functions
     "register_tools",

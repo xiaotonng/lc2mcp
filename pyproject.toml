@@ -28,6 +28,8 @@ dependencies = [
     "langchain>=1.0.0,<2.0.0",
     "fastmcp>=2.0.0",
     "pydantic>=2.0.0",
+    "langchain-google-genai>=4.2.0",
+    "ddgs>=9.10.0",
 ]
 
 [project.optional-dependencies]
@@ -40,6 +42,27 @@ dev = [
 community = [
     "langchain-community>=0.3.0,<1.0.0",
 ]
+server = [
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.20.0",
+    "python-multipart>=0.0.6",
+    "jinja2>=3.0.0",
+    "aiosqlite>=0.19.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "passlib[bcrypt]>=1.7.0",
+    "python-jose[cryptography]>=3.3.0",
+    "langchain-openai>=0.1.0",
+    "langchain-community>=0.3.0",
+    "duckduckgo-search>=6.0.0",
+    "openai>=1.0.0",
+    "langgraph>=0.2.0",
+    "itsdangerous>=2.2.0",
+    "pyyaml>=6.0.0",
+    "langchain-mcp-adapters>=0.1.0",
+]
+
+[project.scripts]
+lc2mcp-server = "lc2mcp_server.main:run"
 
 [project.urls]
 Homepage = "https://github.com/lc2mcp/lc2mcp"
@@ -47,7 +70,7 @@ Repository = "https://github.com/lc2mcp/lc2mcp"
 Issues = "https://github.com/lc2mcp/lc2mcp/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/lc2mcp"]
+packages = ["src/lc2mcp", "src/lc2mcp_scanner", "src/lc2mcp_community", "src/lc2mcp_server"]
 
 [tool.ruff]
 line-length = 100

@@ -1,0 +1,1469 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - lc2mcp{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden bg-gradient-to-br from-background via-background to-background/95">
+    <!-- Navigation Sidebar -->
+    <aside class="w-72 border-r border-border/50 bg-card/50 backdrop-blur-xl flex flex-col shrink-0">
+        <div class="p-6 border-b border-border/50">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20">
+                    <i data-lucide="bot" class="w-7 h-7 text-primary-foreground"></i>
+                </div>
+                <div>
+                    <span class="font-bold text-xl tracking-tight">lc2mcp</span>
+                    <p class="text-sm text-muted-foreground">MCP Server Console</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-2">
+            <div class="p-2 rounded-2xl bg-secondary/50 border border-border/50 shadow-sm">
+                <a href="/dashboard/tools" class="nav-link {{ 'active' if initial_tab == 'tools' else '' }} flex items-center gap-4 px-5 py-4 rounded-xl text-base font-medium transition-all duration-200" data-tab="tools">
+                    <i data-lucide="puzzle" class="w-6 h-6"></i>
+                    <span data-i18n="nav_tools">工具管理</span>
+                </a>
+                <a href="/dashboard/connections" class="nav-link {{ 'active' if initial_tab == 'connections' else '' }} flex items-center gap-4 px-5 py-4 rounded-xl text-base font-medium transition-all duration-200" data-tab="connections">
+                    <i data-lucide="cable" class="w-6 h-6"></i>
+                    <span data-i18n="nav_connections">连接管理</span>
+                </a>
+                <a href="/dashboard/debug" class="nav-link {{ 'active' if initial_tab == 'debug' else '' }} flex items-center gap-4 px-5 py-4 rounded-xl text-base font-medium transition-all duration-200" data-tab="debug">
+                    <i data-lucide="terminal-square" class="w-6 h-6"></i>
+                    <span data-i18n="nav_debug">调试中心</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- User Profile Section -->
+        <div class="m-4 space-y-3">
+            <!-- User Info Card -->
+            <div class="p-4 border border-border/50 rounded-xl bg-secondary/50 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-lg font-bold text-white shadow-lg shrink-0">
+                        {{ user.display_name[0] }}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <span class="text-base font-semibold truncate block">{{ user.display_name }}</span>
+                        <span class="text-sm text-muted-foreground" data-i18n="online">在线</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Row -->
+            <div class="flex items-center gap-2">
+                <!-- Language Toggle -->
+                <button onclick="toggleLanguage()" class="btn btn-ghost flex-1 h-11 rounded-xl hover:bg-secondary transition-colors flex items-center justify-center gap-2 border border-border/50" title="Switch Language">
+                    <i data-lucide="languages" class="w-5 h-5"></i>
+                    <span class="text-sm font-medium" id="lang-label">中文</span>
+                </button>
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="btn btn-ghost h-11 w-11 rounded-xl hover:bg-secondary transition-colors border border-border/50" title="Toggle Theme">
+                    <i data-lucide="sun" class="w-5 h-5 hidden" id="theme-sun"></i>
+                    <i data-lucide="moon" class="w-5 h-5" id="theme-moon"></i>
+                </button>
+                <!-- Logout -->
+                <a href="/logout" class="btn btn-ghost h-11 w-11 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-colors border border-border/50" data-i18n-title="logout" title="退出登录">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-hidden flex flex-col">
+        <!-- Tools Tab -->
+        <div class="tab-content {{ '' if initial_tab == 'tools' else 'hidden' }} h-full flex flex-col p-8 pb-4" id="tab-tools">
+            <div class="mb-6 shrink-0">
+                <h1 class="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text" data-i18n="tools_title">工具管理</h1>
+                <p class="text-muted-foreground mt-2 text-lg" data-i18n="tools_desc">查看所有注册的 MCP 工具和资源</p>
+            </div>
+            
+            <div class="flex-1 grid gap-6 lg:grid-cols-2 min-h-0 grid-rows-[minmax(0,1fr)]">
+                <!-- Tools Card -->
+                <div class="card border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-border/50 flex items-center justify-between bg-gradient-to-r from-secondary/30 to-transparent shrink-0">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                                <i data-lucide="wrench" class="w-7 h-7 text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-semibold text-lg" data-i18n="registered_tools">已注册工具</h2>
+                                <p class="text-sm text-muted-foreground" data-i18n="tools_callable">可供 MCP 客户端调用</p>
+                            </div>
+                        </div>
+                        <span class="inline-flex items-center justify-center min-w-[32px] h-8 px-3 rounded-full bg-orange-500/10 text-orange-500 font-bold text-base" id="tools-count">0</span>
+                    </div>
+                    <div class="p-5 flex-1 overflow-y-auto space-y-3" id="tools-list">
+                        <div class="flex items-center justify-center py-12 text-muted-foreground">
+                            <i data-lucide="loader-2" class="w-7 h-7 animate-spin mr-3"></i>
+                            加载中...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resources Card -->
+                <div class="card border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-border/50 flex items-center justify-between bg-gradient-to-r from-secondary/30 to-transparent shrink-0">
+                        <div class="flex items-center gap-4">
+                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                <i data-lucide="database" class="w-7 h-7 text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-semibold text-lg" data-i18n="registered_resources">已注册资源</h2>
+                                <p class="text-sm text-muted-foreground" data-i18n="resources_endpoints">MCP 资源端点</p>
+                            </div>
+                        </div>
+                        <span class="inline-flex items-center justify-center min-w-[32px] h-8 px-3 rounded-full bg-blue-500/10 text-blue-500 font-bold text-base" id="resources-count">0</span>
+                    </div>
+                    <div class="p-5 flex-1 overflow-y-auto space-y-3" id="resources-list">
+                        <div class="flex items-center justify-center py-12 text-muted-foreground">
+                            <i data-lucide="loader-2" class="w-7 h-7 animate-spin mr-3"></i>
+                            加载中...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connections Tab -->
+        <div class="tab-content {{ '' if initial_tab == 'connections' else 'hidden' }} p-8" id="tab-connections">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold tracking-tight" data-i18n="connections_title">连接管理</h1>
+                <p class="text-muted-foreground mt-2 text-lg" data-i18n="connections_desc">管理 MCP 平台连接和 OAuth 授权</p>
+            </div>
+
+            <!-- Server Config -->
+            <div class="card border-border/50 bg-card/50 backdrop-blur-sm mb-6 overflow-hidden">
+                <div class="p-6 border-b border-border/50 bg-gradient-to-r from-secondary/30 to-transparent">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                            <i data-lucide="server" class="w-7 h-7 text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-semibold text-lg" data-i18n="mcp_info">服务器配置</h2>
+                            <p class="text-sm text-muted-foreground" data-i18n="server_config_desc">MCP Server 连接信息</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6" id="server-config">
+                    <div class="flex items-center justify-center py-12 text-muted-foreground">
+                        <i data-lucide="loader-2" class="w-7 h-7 animate-spin mr-3"></i>
+                        加载中...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Connections -->
+            <div class="card border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+                <div class="p-6 border-b border-border/50 bg-gradient-to-r from-secondary/30 to-transparent">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/20">
+                            <i data-lucide="globe-2" class="w-7 h-7 text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-semibold text-lg" data-i18n="platforms">平台连接状态</h2>
+                            <p class="text-sm text-muted-foreground" data-i18n="platforms_desc">支持的 MCP 客户端平台</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" id="platforms-list">
+                        {% for platform in platforms %}
+                        <div class="group p-5 rounded-2xl border border-border/50 bg-gradient-to-br from-secondary/20 to-transparent hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300" data-platform="{{ platform.id }}">
+                            <div class="flex items-start gap-4">
+                                <div class="platform-icon w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden group-hover:scale-105 transition-transform" style="background: {{ platform.color }}25;">
+                                    <img src="{{ platform.icon }}" alt="{{ platform.name }}" class="w-8 h-8 object-contain platform-svg" style="filter: brightness(0) saturate(100%) invert(1);"
+                                        onerror="this.style.display='none'; this.parentElement.innerHTML='<i data-lucide=\'{{ platform.lucide | default('box') }}\' class=\'w-7 h-7 text-white\'></i>'; lucide.createIcons();">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <h3 class="font-semibold text-base">{{ platform.name }}</h3>
+                                        {% if platform.oauth_enabled %}
+                                        <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-medium">OAuth</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-sm text-muted-foreground">{{ platform.description }}</p>
+                                    <div class="flex items-center gap-2 mt-3">
+                                        <span class="status-dot w-3 h-3 rounded-full bg-muted-foreground/50"></span>
+                                        <span class="status-text text-sm text-muted-foreground" data-i18n="not_connected">未连接</span>
+                                    </div>
+                                    <div class="text-sm text-muted-foreground mt-3 pt-3 border-t border-border/30 space-y-1.5">
+                                        <div class="call-count flex justify-between"><span data-i18n="call_count">调用次数</span><span class="font-medium text-foreground">0</span></div>
+                                        <div class="last-call flex justify-between"><span data-i18n="last_call">最后调用</span><span class="font-medium text-foreground">-</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Tab (Chat) -->
+        <div class="tab-content {{ '' if initial_tab == 'debug' else 'hidden' }} h-full" id="tab-debug">
+            <div class="flex h-full">
+                <!-- Session Sidebar -->
+                <aside class="w-80 border-r border-border/50 bg-card/30 backdrop-blur-sm flex flex-col shrink-0">
+                    <div class="p-5 border-b border-border/50 flex items-center justify-between">
+                        <h2 class="font-semibold text-lg" data-i18n="session_list">会话列表</h2>
+                        <button class="btn btn-secondary h-10 px-4" onclick="createSession()">
+                            <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                            <span data-i18n="new">新建</span>
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-3 space-y-2" id="session-list">
+                        {% for session in sessions %}
+                        <div class="session-item group flex items-center justify-between p-4 rounded-xl hover:bg-secondary/50 cursor-pointer transition-all duration-200" 
+                            data-id="{{ session.id }}" onclick="selectSession({{ session.id }})">
+                            <div class="min-w-0 flex-1">
+                                <div class="font-medium truncate session-title text-base">{{ session.title }}</div>
+                                <div class="text-sm text-muted-foreground session-model mt-1 flex items-center gap-2">
+                                    <i data-lucide="cpu" class="w-4 h-4"></i>
+                                    {{ session.model if session.model else 'gpt-5.2' }}
+                                </div>
+                            </div>
+                            <button class="btn btn-ghost h-10 w-10 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:bg-destructive/10 hover:text-destructive" 
+                                onclick="event.stopPropagation(); deleteSession({{ session.id }})">
+                                <i data-lucide="trash-2" class="w-6 h-6"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </aside>
+
+                <!-- Chat Area -->
+                <div class="flex-1 flex flex-col min-w-0 relative">
+                    <!-- Header -->
+                    <div class="p-5 border-b border-border/50 flex items-center justify-between bg-card/30 backdrop-blur-sm">
+                        <h3 class="font-semibold text-xl truncate" id="session-title">选择或创建会话</h3>
+                        <div class="flex items-center gap-3 shrink-0">
+                            <!-- Model Selector -->
+                            <div class="relative model-dropdown">
+                                <button type="button" class="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-secondary/50 hover:bg-secondary/70 transition-all cursor-pointer" onclick="toggleModelDropdown()">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+                                        <i data-lucide="sparkles" class="w-5 h-5 text-white" id="model-icon"></i>
+                                    </div>
+                                    <span class="font-medium text-base" id="model-display">GPT-5.2</span>
+                                    <i data-lucide="chevron-down" class="w-6 h-6 text-muted-foreground"></i>
+                                </button>
+                                <div id="model-dropdown-menu" class="hidden absolute right-0 top-full mt-2 w-64 bg-card border border-border/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+                                    <div class="p-2">
+                                        <button class="model-option w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/50 transition-all text-left" data-model="gpt-5.2" onclick="selectModel('gpt-5.2', 'GPT-5.2', 'sparkles', 'emerald')">
+                                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+                                                <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-medium">GPT-5.2</div>
+                                                <div class="text-sm text-muted-foreground">OpenAI</div>
+                                            </div>
+                                        </button>
+                                        <button class="model-option w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/50 transition-all text-left" data-model="gemini-3-pro" onclick="selectModel('gemini-3-pro', 'Gemini 3 Pro', 'diamond', 'blue')">
+                                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
+                                                <i data-lucide="diamond" class="w-5 h-5 text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-medium">Gemini 3 Pro</div>
+                                                <div class="text-sm text-muted-foreground">Google</div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                    <div class="border-t border-border/50 p-2">
+                                        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/50 transition-all text-left" onclick="showModelConfigModal()">
+                                            <div class="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center">
+                                                <i data-lucide="settings" class="w-5 h-5 text-muted-foreground"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-medium">模型配置</div>
+                                                <div class="text-sm text-muted-foreground">管理 API 密钥</div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    <div class="flex-1 overflow-y-auto p-8 pb-32 space-y-6" id="messages">
+                        <div class="flex items-center justify-center h-full text-muted-foreground">
+                            <div class="text-center">
+                                <div class="w-24 h-24 rounded-2xl bg-secondary/50 flex items-center justify-center mx-auto mb-6">
+                                    <i data-lucide="message-square-plus" class="w-12 h-12 opacity-50"></i>
+                                </div>
+                                <p class="text-xl font-medium">选择或创建会话开始对话</p>
+                                <p class="text-base mt-2">在左侧选择已有会话或点击"新建"创建新会话</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Input Box -->
+                    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6">
+                        <div class="flex flex-wrap gap-2 mb-3" id="file-preview"></div>
+                        <form class="relative bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 shadow-2xl shadow-black/20 overflow-hidden" id="chat-form" onsubmit="sendMessage(event)">
+                            <input type="file" id="file-input" multiple accept="image/*,.pdf,.txt,.md" onchange="handleFileSelect(event)" hidden>
+                            <div class="flex items-end gap-2 p-3">
+                                <button type="button" class="btn btn-ghost h-11 w-11 rounded-xl shrink-0 hover:bg-secondary/50" onclick="document.getElementById('file-input').click()" title="上传文件">
+                                    <i data-lucide="paperclip" class="w-6 h-6"></i>
+                                </button>
+                                <textarea id="message-input" 
+                                    class="flex-1 min-h-[44px] max-h-32 resize-none py-2.5 px-1 bg-transparent border-0 text-base focus:ring-0 focus:outline-none placeholder:text-muted-foreground" 
+                                    placeholder="输入消息，按 Enter 发送..."
+                                    data-i18n-placeholder="input_placeholder"
+                                    rows="1" 
+                                    onkeydown="handleKeyDown(event)"></textarea>
+                                <button type="submit" class="btn bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white h-12 w-12 rounded-xl shrink-0 shadow-lg shadow-violet-500/25" id="send-btn" data-i18n-title="send" title="发送">
+                                    <i data-lucide="send" class="w-6 h-6"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Model Config Modal -->
+<div id="model-config-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-card rounded-2xl border border-border/50 shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+        <div class="p-6 border-b border-border/50 flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-bold">模型配置</h2>
+                <p class="text-sm text-muted-foreground mt-1">配置 AI 模型和 API 密钥</p>
+            </div>
+            <button class="btn btn-ghost h-12 w-12 rounded-xl hover:bg-secondary" onclick="hideModelConfigModal()">
+                <i data-lucide="x" class="w-7 h-7"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6">
+            <!-- Preset Models -->
+            <div class="mb-8">
+                <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-3">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-amber-500"></i>
+                    预设模型
+                </h3>
+                <div class="grid gap-4 sm:grid-cols-2" id="preset-models-config">
+                    <div class="flex items-center justify-center py-8 text-muted-foreground">
+                        <i data-lucide="loader-2" class="w-6 h-6 animate-spin mr-3"></i>
+                        加载中...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Models -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-3">
+                        <i data-lucide="settings-2" class="w-5 h-5 text-purple-500"></i>
+                        自定义模型
+                    </h3>
+                    <button class="btn btn-secondary" onclick="showAddModelForm()">
+                        <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                        添加
+                    </button>
+                </div>
+                <div class="space-y-3" id="custom-models-config">
+                    <div class="p-5 rounded-xl border-2 border-dashed border-border/50 text-center text-muted-foreground">
+                        <p class="text-base">暂无自定义模型</p>
+                        <p class="text-sm mt-1">点击上方"添加"按钮配置自定义模型</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Model Form (hidden by default) -->
+            <div id="add-model-form-container" class="hidden mt-6 p-6 rounded-xl bg-secondary/30 border border-border/50">
+                <h4 class="font-semibold text-lg mb-5">添加自定义模型</h4>
+                <form id="add-model-form" class="space-y-5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">模型名称</label>
+                            <input type="text" name="name" class="input h-11" placeholder="例如: Claude 3.5" required>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium">服务商</label>
+                            <select name="provider" class="input h-11" required>
+                                <option value="openrouter">OpenRouter</option>
+                                <option value="openai">OpenAI 兼容</option>
+                                <option value="anthropic">Anthropic</option>
+                                <option value="custom">自定义</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium">模型 ID</label>
+                        <input type="text" name="model_id" class="input h-11" placeholder="例如: anthropic/claude-3.5-sonnet" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium">API Base URL</label>
+                        <input type="url" name="base_url" class="input h-11" placeholder="https://openrouter.ai/api/v1">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium">API Key</label>
+                        <input type="password" name="api_key" class="input h-11" placeholder="sk-..." required>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-3">
+                        <button type="button" class="btn btn-ghost h-11 px-6" onclick="hideAddModelForm()">取消</button>
+                        <button type="submit" class="btn btn-primary h-11 px-6">添加模型</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modal (for tool source and resource preview) -->
+<div id="detail-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4" onclick="if(event.target === this) hideDetailModal()">
+    <div class="bg-card rounded-2xl border border-border/50 shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+        <div class="p-6 border-b border-border/50 flex items-center justify-between shrink-0">
+            <h2 class="text-xl font-bold flex items-center" id="detail-modal-title">详情</h2>
+            <button class="btn btn-ghost h-12 w-12 rounded-xl hover:bg-secondary" onclick="hideDetailModal()">
+                <i data-lucide="x" class="w-7 h-7"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6" id="detail-modal-content">
+            <!-- Content will be inserted here -->
+        </div>
+    </div>
+</div>
+
+<!-- Configure Preset Modal -->
+<div id="configure-preset-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-card rounded-2xl border border-border/50 shadow-2xl w-full max-w-md">
+        <div class="p-6 border-b border-border/50">
+            <h2 class="text-xl font-bold" id="configure-preset-title">配置 API 密钥</h2>
+            <p class="text-sm text-muted-foreground mt-1">输入您的 API 密钥以启用此模型</p>
+        </div>
+        <form id="configure-preset-form" class="p-6 space-y-5">
+            <input type="hidden" name="model_id" id="configure-preset-model-id">
+            <div class="space-y-2">
+                <label class="text-sm font-medium">API Key</label>
+                <input type="password" name="api_key" class="input h-11" placeholder="sk-..." required>
+                <p class="text-sm text-muted-foreground">您的密钥将被安全存储，仅用于调用对应的 API</p>
+            </div>
+        </form>
+        <div class="p-6 border-t border-border/50 flex justify-end gap-3">
+            <button type="button" class="btn btn-ghost h-11 px-6" onclick="hideConfigurePresetModal()">取消</button>
+            <button type="submit" form="configure-preset-form" class="btn btn-primary h-11 px-6">保存配置</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Light mode styles */
+    .nav-link {
+        color: var(--muted-foreground);
+    }
+    .nav-link:hover {
+        background: var(--secondary);
+        color: var(--foreground);
+    }
+    .nav-link.active {
+        background: var(--secondary);
+        color: var(--foreground);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .session-item.active {
+        background: var(--secondary);
+    }
+    .message-user .message-bubble {
+        background: linear-gradient(135deg, hsl(262 83% 58%), hsl(262 83% 48%));
+        color: white;
+    }
+    .message-assistant .message-bubble {
+        background: var(--secondary);
+        border: 1px solid var(--border);
+    }
+    
+    /* Dark mode enhancements */
+    .dark .nav-link.active {
+        background: linear-gradient(135deg, hsl(240 3.7% 15.9%), hsl(240 3.7% 12%));
+    }
+    .dark .session-item.active {
+        background: linear-gradient(135deg, hsl(240 3.7% 15.9%), hsl(240 3.7% 12%));
+    }
+    
+    /* Custom scrollbar - light */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: hsl(240 5% 80%);
+        border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: hsl(240 5% 70%);
+    }
+    
+    /* Custom scrollbar - dark */
+    .dark ::-webkit-scrollbar-thumb {
+        background: hsl(240 3.7% 25%);
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: hsl(240 3.7% 35%);
+    }
+</style>
+
+<script>
+// Store selected model
+let currentModel = 'gpt-5.2';
+
+// Tab switching with URL routing
+function switchTab(tab, pushState = true) {
+    // Update nav links
+    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+    document.querySelector(`.nav-link[data-tab="${tab}"]`)?.classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById(`tab-${tab}`)?.classList.remove('hidden');
+    
+    // Load data for tab
+    if (tab === 'tools') loadTools();
+    if (tab === 'connections') loadConnections();
+    
+    // Update URL
+    if (pushState) {
+        const url = `/dashboard/${tab}`;
+        history.pushState({ tab }, '', url);
+    }
+    
+    lucide.createIcons();
+    if (typeof applyLanguage === 'function') applyLanguage();
+}
+
+document.querySelectorAll('.nav-link').forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tab = item.dataset.tab;
+        switchTab(tab);
+    });
+});
+
+// Handle browser back/forward
+window.addEventListener('popstate', (e) => {
+    if (e.state && e.state.tab) {
+        switchTab(e.state.tab, false);
+    } else {
+        // Parse tab from URL
+        const path = window.location.pathname;
+        const match = path.match(/\/dashboard\/(\w+)/);
+        if (match) {
+            switchTab(match[1], false);
+        } else {
+            switchTab('tools', false);
+        }
+    }
+});
+
+// Initialize from URL on page load (deferred to ensure all code is loaded)
+document.addEventListener('DOMContentLoaded', function initTabFromUrl() {
+    // Get initial tab from server or URL
+    const serverTab = '{{ initial_tab | default("tools") }}';
+    const path = window.location.pathname;
+    const match = path.match(/\/dashboard\/(\w+)/);
+    const tab = match ? match[1] : serverTab;
+    
+    // Replace current state
+    history.replaceState({ tab }, '', `/dashboard/${tab}`);
+    switchTab(tab, false);
+});
+
+// Model dropdown
+function toggleModelDropdown() {
+    const menu = document.getElementById('model-dropdown-menu');
+    menu.classList.toggle('hidden');
+}
+
+function selectModel(modelId, modelName, icon, color) {
+    currentModel = modelId;
+    document.getElementById('model-display').textContent = modelName;
+    
+    const iconEl = document.getElementById('model-icon');
+    iconEl.setAttribute('data-lucide', icon);
+    
+    const iconWrapper = iconEl.parentElement;
+    iconWrapper.className = `w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center`;
+    if (color === 'emerald') {
+        iconWrapper.classList.add('from-emerald-500', 'to-green-600');
+    } else if (color === 'blue') {
+        iconWrapper.classList.add('from-blue-500', 'to-cyan-600');
+    }
+    
+    lucide.createIcons();
+    toggleModelDropdown();
+    
+    if (currentSessionId) {
+        updateSessionModel();
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const dropdown = document.querySelector('.model-dropdown');
+    const menu = document.getElementById('model-dropdown-menu');
+    if (dropdown && !dropdown.contains(e.target)) {
+        menu.classList.add('hidden');
+    }
+});
+
+// Load tools and resources
+// Store tools and resources data for modal display
+let toolsCache = [];
+let resourcesCache = [];
+
+async function loadTools() {
+    try {
+        const [toolsRes, resourcesRes] = await Promise.all([
+            fetch('/api/mcp/tools'),
+            fetch('/api/mcp/resources')
+        ]);
+        
+        const toolsData = await toolsRes.json();
+        const resourcesData = await resourcesRes.json();
+        
+        // Cache the data
+        toolsCache = toolsData.tools;
+        resourcesCache = resourcesData.resources;
+        
+        const toolsList = document.getElementById('tools-list');
+        document.getElementById('tools-count').textContent = toolsData.tools.length;
+        
+        if (toolsData.tools.length === 0) {
+            toolsList.innerHTML = '<div class="text-center py-12 text-muted-foreground text-base">暂无工具</div>';
+        } else {
+            toolsList.innerHTML = toolsData.tools.map((tool, index) => `
+                <div class="p-5 rounded-xl bg-gradient-to-br from-secondary/50 to-secondary/20 hover:from-secondary/70 hover:to-secondary/30 transition-all duration-200 cursor-pointer group" onclick="showToolDetail(${index})">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
+                            <i data-lucide="wrench" class="w-6 h-6 text-orange-500"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-semibold text-base">${tool.name}</h4>
+                                <i data-lucide="code-2" class="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <p class="text-sm text-muted-foreground mt-1">${tool.description}</p>
+                            ${tool.args.length ? `<code class="text-sm bg-background/50 px-2.5 py-1 rounded-lg mt-2 inline-block font-mono">${tool.args.join(', ')}</code>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        const resourcesList = document.getElementById('resources-list');
+        document.getElementById('resources-count').textContent = resourcesData.resources.length;
+        
+        if (resourcesData.resources.length === 0) {
+            resourcesList.innerHTML = '<div class="text-center py-12 text-muted-foreground text-base">暂无资源</div>';
+        } else {
+            resourcesList.innerHTML = resourcesData.resources.map((res, index) => `
+                <div class="p-5 rounded-xl bg-gradient-to-br from-secondary/50 to-secondary/20 hover:from-secondary/70 hover:to-secondary/30 transition-all duration-200 cursor-pointer group" onclick="showResourcePreview(${index})">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                            <i data-lucide="database" class="w-6 h-6 text-blue-500"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-semibold text-base">${res.name}</h4>
+                                <i data-lucide="eye" class="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                            <p class="text-sm text-muted-foreground mt-1">${res.description}</p>
+                            <code class="text-sm bg-background/50 px-2.5 py-1 rounded-lg mt-2 inline-block font-mono">${res.uri}</code>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        lucide.createIcons();
+    } catch (error) {
+        console.error('Failed to load tools:', error);
+    }
+}
+
+// Show tool detail modal with source code
+function showToolDetail(index) {
+    const tool = toolsCache[index];
+    if (!tool) return;
+    
+    const modal = document.getElementById('detail-modal');
+    const title = document.getElementById('detail-modal-title');
+    const content = document.getElementById('detail-modal-content');
+    
+    title.innerHTML = `<i data-lucide="wrench" class="w-6 h-6 text-orange-500 mr-3"></i> ${tool.name}`;
+    content.innerHTML = `
+        <div class="mb-4">
+            <p class="text-muted-foreground">${tool.description}</p>
+            ${tool.args.length ? `<div class="mt-3"><span class="text-sm font-medium">参数：</span><code class="text-sm bg-secondary px-2 py-1 rounded-lg ml-2 font-mono">${tool.args.join(', ')}</code></div>` : ''}
+        </div>
+        <div class="border-t border-border pt-4">
+            <h4 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                <i data-lucide="code-2" class="w-4 h-4"></i>
+                源代码
+            </h4>
+            <pre class="bg-secondary/50 rounded-xl p-4 overflow-x-auto text-sm font-mono leading-relaxed max-h-96 overflow-y-auto"><code>${escapeHtml(tool.source || '# 源代码不可用')}</code></pre>
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+    lucide.createIcons();
+}
+
+// Show resource preview modal
+async function showResourcePreview(index) {
+    const resource = resourcesCache[index];
+    if (!resource) return;
+    
+    const modal = document.getElementById('detail-modal');
+    const title = document.getElementById('detail-modal-title');
+    const content = document.getElementById('detail-modal-content');
+    
+    title.innerHTML = `<i data-lucide="database" class="w-6 h-6 text-blue-500 mr-3"></i> ${resource.name}`;
+    content.innerHTML = `
+        <div class="mb-4">
+            <p class="text-muted-foreground">${resource.description}</p>
+            <div class="mt-3"><span class="text-sm font-medium">URI：</span><code class="text-sm bg-secondary px-2 py-1 rounded-lg ml-2 font-mono">${resource.uri}</code></div>
+        </div>
+        <div class="border-t border-border pt-4">
+            <h4 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+                预览
+            </h4>
+            <div class="bg-secondary/50 rounded-xl p-4 flex items-center justify-center text-muted-foreground">
+                <i data-lucide="loader-2" class="w-6 h-6 animate-spin mr-3"></i>
+                加载中...
+            </div>
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+    lucide.createIcons();
+    
+    // Fetch resource preview
+    try {
+        const res = await fetch(`/api/mcp/resources/preview?uri=${encodeURIComponent(resource.uri)}`);
+        const data = await res.json();
+        
+        const previewContainer = content.querySelector('.border-t > div:last-child');
+        if (data.mime_type && data.mime_type.includes('html')) {
+            previewContainer.innerHTML = `<div class="prose prose-sm dark:prose-invert max-w-none">${data.content}</div>`;
+        } else {
+            previewContainer.innerHTML = `<pre class="overflow-x-auto text-sm font-mono leading-relaxed max-h-96 overflow-y-auto"><code>${escapeHtml(data.content || '无内容')}</code></pre>`;
+        }
+    } catch (error) {
+        const previewContainer = content.querySelector('.border-t > div:last-child');
+        previewContainer.innerHTML = `<div class="text-destructive flex items-center gap-2"><i data-lucide="alert-circle" class="w-5 h-5"></i> 预览失败: ${error.message}</div>`;
+        lucide.createIcons();
+    }
+}
+
+function hideDetailModal() {
+    document.getElementById('detail-modal').classList.add('hidden');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Load connections
+async function loadConnections() {
+    try {
+        const [configRes, platformsRes] = await Promise.all([
+            fetch('/api/mcp/config'),
+            fetch('/api/mcp/platforms')
+        ]);
+        
+        const config = await configRes.json();
+        const platformsData = await platformsRes.json();
+        
+        document.getElementById('server-config').innerHTML = `
+            <div class="grid gap-5 md:grid-cols-2">
+                <div class="space-y-3">
+                    <label class="text-sm font-semibold text-muted-foreground uppercase tracking-wider" data-i18n="server_url">${t('server_url')}</label>
+                    <div class="p-4 rounded-xl bg-secondary/50 font-mono text-sm cursor-pointer hover:bg-secondary/70 transition-all flex items-center gap-3 group" 
+                        onclick="copyToClipboard('${config.server_url}')">
+                        <span class="truncate flex-1">${config.server_url}</span>
+                        <i data-lucide="copy" class="w-5 h-5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors"></i>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <label class="text-sm font-semibold text-muted-foreground uppercase tracking-wider" data-i18n="oauth_metadata">${t('oauth_metadata')}</label>
+                    <div class="p-4 rounded-xl bg-secondary/50 font-mono text-sm cursor-pointer hover:bg-secondary/70 transition-all flex items-center gap-3 group" 
+                        onclick="copyToClipboard('${config.oauth_metadata_url}')">
+                        <span class="truncate flex-1">${config.oauth_metadata_url}</span>
+                        <i data-lucide="copy" class="w-5 h-5 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-500/20">
+                <p class="flex items-center gap-3">
+                    <i data-lucide="shield-check" class="w-6 h-6 text-emerald-500"></i>
+                    <span class="font-semibold text-emerald-500 text-base" data-i18n="oauth_enabled_full">${t('oauth_enabled_full')}</span>
+                    <span class="text-sm text-muted-foreground" data-i18n="secure_auth">· ${t('secure_auth')}</span>
+                </p>
+            </div>
+        `;
+        
+        platformsData.platforms.forEach(platform => {
+            const card = document.querySelector(`[data-platform="${platform.id}"]`);
+            if (card) {
+                const statusDot = card.querySelector('.status-dot');
+                const statusText = card.querySelector('.status-text');
+                const callCount = card.querySelector('.call-count');
+                const lastCall = card.querySelector('.last-call');
+                
+                if (platform.is_connected) {
+                    statusDot.classList.remove('bg-muted-foreground/50');
+                    statusDot.classList.add('bg-emerald-500');
+                    statusText.textContent = t('connected');
+                    statusText.classList.remove('text-muted-foreground');
+                    statusText.classList.add('text-emerald-500', 'font-medium');
+                } else {
+                    statusText.textContent = t('not_connected');
+                }
+                
+                callCount.innerHTML = `<span data-i18n="call_count">${t('call_count')}</span><span class="font-medium text-foreground">${platform.call_count}</span>`;
+                lastCall.innerHTML = `<span data-i18n="last_call">${t('last_call')}</span><span class="font-medium text-foreground">${platform.last_call_at ? new Date(platform.last_call_at).toLocaleString() : '-'}</span>`;
+            }
+        });
+        
+        lucide.createIcons();
+    } catch (error) {
+        console.error('Failed to load connections:', error);
+    }
+}
+
+// Model Config Modal
+function showModelConfigModal() {
+    document.getElementById('model-config-modal').classList.remove('hidden');
+    document.getElementById('model-dropdown-menu').classList.add('hidden');
+    loadModelsForConfig();
+    lucide.createIcons();
+}
+
+function hideModelConfigModal() {
+    document.getElementById('model-config-modal').classList.add('hidden');
+}
+
+async function loadModelsForConfig() {
+    try {
+        const res = await fetch('/api/models');
+        const data = await res.json();
+        
+        const presetModels = data.models.filter(m => m.is_preset);
+        const customModels = data.models.filter(m => !m.is_preset);
+        
+        // Render preset models
+        document.getElementById('preset-models-config').innerHTML = presetModels.map(model => `
+            <div class="p-5 rounded-xl border border-border/50 bg-secondary/20">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 rounded-lg bg-gradient-to-br ${model.provider === 'openai' ? 'from-emerald-500 to-green-600' : 'from-blue-500 to-cyan-600'} flex items-center justify-center">
+                        <i data-lucide="${model.provider === 'openai' ? 'sparkles' : 'diamond'}" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-base">${model.name}</h4>
+                        <p class="text-sm text-muted-foreground">${model.provider}</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    ${model.has_api_key 
+                        ? '<span class="text-sm text-emerald-500 flex items-center gap-2"><i data-lucide="check-circle" class="w-5 h-5"></i> 已配置</span>'
+                        : '<span class="text-sm text-amber-500 flex items-center gap-2"><i data-lucide="alert-circle" class="w-5 h-5"></i> 未配置</span>'
+                    }
+                    <button class="btn btn-ghost" onclick="showConfigurePresetModal('${model.model_id}', '${model.name}')">
+                        <i data-lucide="key" class="w-5 h-5 mr-2"></i>
+                        ${model.has_api_key ? '更新' : '配置'}
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        // Render custom models
+        const customContainer = document.getElementById('custom-models-config');
+        if (customModels.length === 0) {
+            customContainer.innerHTML = `
+                <div class="p-5 rounded-xl border-2 border-dashed border-border/50 text-center text-muted-foreground">
+                    <p class="text-base">暂无自定义模型</p>
+                    <p class="text-sm mt-1">点击上方"添加"按钮配置自定义模型</p>
+                </div>
+            `;
+        } else {
+            customContainer.innerHTML = customModels.map(model => `
+                <div class="p-5 rounded-xl border border-border/50 bg-secondary/20 flex items-center justify-between group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                            <i data-lucide="settings-2" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-base">${model.name}</h4>
+                            <p class="text-sm text-muted-foreground">${model.provider} · ${model.model_id}</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-ghost h-11 w-11 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive" onclick="deleteModel(${model.config_id})">
+                        <i data-lucide="trash-2" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        lucide.createIcons();
+    } catch (error) {
+        console.error('Failed to load models:', error);
+    }
+}
+
+function showAddModelForm() {
+    document.getElementById('add-model-form-container').classList.remove('hidden');
+}
+
+function hideAddModelForm() {
+    document.getElementById('add-model-form-container').classList.add('hidden');
+    document.getElementById('add-model-form').reset();
+}
+
+function showConfigurePresetModal(modelId, modelName) {
+    document.getElementById('configure-preset-title').textContent = `配置 ${modelName}`;
+    document.getElementById('configure-preset-model-id').value = modelId;
+    document.getElementById('configure-preset-modal').classList.remove('hidden');
+}
+
+function hideConfigurePresetModal() {
+    document.getElementById('configure-preset-modal').classList.add('hidden');
+    document.getElementById('configure-preset-form').reset();
+}
+
+// Form submissions
+document.getElementById('add-model-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    try {
+        const res = await fetch('/api/models', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                name: formData.get('name'),
+                provider: formData.get('provider'),
+                model_id: formData.get('model_id'),
+                base_url: formData.get('base_url'),
+                api_key: formData.get('api_key'),
+            })
+        });
+        
+        if (res.ok) {
+            hideAddModelForm();
+            loadModelsForConfig();
+        }
+    } catch (error) {
+        console.error('Failed to add model:', error);
+    }
+});
+
+document.getElementById('configure-preset-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const modelId = formData.get('model_id');
+    
+    try {
+        const res = await fetch(`/api/models/preset/${modelId}/configure`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (res.ok) {
+            hideConfigurePresetModal();
+            loadModelsForConfig();
+        }
+    } catch (error) {
+        console.error('Failed to configure model:', error);
+    }
+});
+
+async function deleteModel(modelId) {
+    if (!confirm('确定要删除这个模型配置吗？')) return;
+    
+    try {
+        await fetch(`/api/models/${modelId}`, {method: 'DELETE'});
+        loadModelsForConfig();
+    } catch (error) {
+        console.error('Failed to delete model:', error);
+    }
+}
+
+// Chat functionality
+let currentSessionId = null;
+let uploadedFiles = [];
+
+async function createSession() {
+    const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({model: currentModel})
+    });
+    const session = await response.json();
+    
+    const list = document.getElementById('session-list');
+    const item = document.createElement('div');
+    item.className = 'session-item group flex items-center justify-between p-4 rounded-xl hover:bg-secondary/50 cursor-pointer transition-all duration-200';
+    item.dataset.id = session.id;
+    item.onclick = () => selectSession(session.id);
+    item.innerHTML = `
+        <div class="min-w-0 flex-1">
+            <div class="font-medium truncate session-title text-base">${session.title}</div>
+            <div class="text-sm text-muted-foreground session-model mt-1 flex items-center gap-2">
+                <i data-lucide="cpu" class="w-4 h-4"></i>
+                ${session.model}
+            </div>
+        </div>
+        <button class="btn btn-ghost h-10 w-10 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 hover:bg-destructive/10 hover:text-destructive" 
+            onclick="event.stopPropagation(); deleteSession(${session.id})">
+            <i data-lucide="trash-2" class="w-6 h-6"></i>
+        </button>
+    `;
+    list.insertBefore(item, list.firstChild);
+    lucide.createIcons();
+    
+    selectSession(session.id);
+}
+
+async function selectSession(sessionId) {
+    currentSessionId = sessionId;
+    
+    document.querySelectorAll('.session-item').forEach(item => {
+        item.classList.toggle('active', parseInt(item.dataset.id) === sessionId);
+    });
+    
+    const response = await fetch(`/api/sessions/${sessionId}/conversations`);
+    const conversations = await response.json();
+    
+    const container = document.getElementById('messages');
+    if (conversations.length === 0) {
+        container.innerHTML = `
+            <div class="flex items-center justify-center h-full text-muted-foreground">
+                <div class="text-center">
+                    <div class="w-24 h-24 rounded-2xl bg-secondary/50 flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="message-square-plus" class="w-12 h-12 opacity-50"></i>
+                    </div>
+                    <p class="text-xl font-medium" data-i18n="start_chat">开始新对话</p>
+                    <p class="text-base mt-2" data-i18n="type_message">在下方输入消息开始对话</p>
+                </div>
+            </div>
+        `;
+    } else {
+        // Each conversation has input (user) and output (assistant)
+        container.innerHTML = conversations.map(conv => `
+            <!-- User message -->
+            <div class="message-user flex justify-end">
+                <div class="message-bubble max-w-[75%] p-5 rounded-2xl">
+                    <div class="text-base leading-relaxed">${formatMessage(conv.input)}</div>
+                    ${conv.input_files && conv.input_files.length > 0 ? `
+                        <div class="text-xs text-muted-foreground mt-2">
+                            <i data-lucide="paperclip" class="w-3 h-3 inline"></i> ${conv.input_files.length} file(s)
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            <!-- Assistant message -->
+            <div class="message-assistant flex justify-start">
+                <div class="message-bubble max-w-[85%] p-5 rounded-2xl">
+                    ${renderTokenStats({
+                        input_tokens: conv.input_tokens,
+                        output_tokens: conv.output_tokens,
+                        total_tokens: conv.total_tokens,
+                        latency_ms: conv.latency_ms
+                    })}
+                    ${renderToolCalls(conv.tool_calls)}
+                    <div class="text-base leading-relaxed">${formatMessage(conv.output)}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+    container.scrollTop = container.scrollHeight;
+    lucide.createIcons();
+    applyLanguage();
+    
+    const sessionItem = document.querySelector(`.session-item[data-id="${sessionId}"]`);
+    if (sessionItem) {
+        document.getElementById('session-title').textContent = 
+            sessionItem.querySelector('.session-title').textContent;
+    }
+}
+
+async function deleteSession(sessionId) {
+    if (!confirm('确定要删除这个会话吗？')) return;
+    
+    await fetch(`/api/sessions/${sessionId}`, {method: 'DELETE'});
+    
+    const item = document.querySelector(`.session-item[data-id="${sessionId}"]`);
+    if (item) item.remove();
+    
+    if (currentSessionId === sessionId) {
+        currentSessionId = null;
+        document.getElementById('session-title').textContent = '选择或创建会话';
+        document.getElementById('messages').innerHTML = `
+            <div class="flex items-center justify-center h-full text-muted-foreground">
+                <div class="text-center">
+                    <div class="w-24 h-24 rounded-2xl bg-secondary/50 flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="message-square" class="w-12 h-12 opacity-50"></i>
+                    </div>
+                    <p class="text-xl font-medium">选择或创建会话开始对话</p>
+                    <p class="text-base mt-2">在左侧选择已有会话或点击"新建"创建新会话</p>
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+}
+
+async function updateSessionModel() {
+    if (!currentSessionId) return;
+    await fetch(`/api/sessions/${currentSessionId}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({model: currentModel})
+    });
+    
+    const sessionItem = document.querySelector(`.session-item[data-id="${currentSessionId}"]`);
+    if (sessionItem) {
+        sessionItem.querySelector('.session-model').innerHTML = `<i data-lucide="cpu" class="w-4 h-4"></i> ${currentModel}`;
+        lucide.createIcons();
+    }
+}
+
+function formatMessage(content) {
+    return content
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`([^`]+)`/g, '<code class="bg-secondary/50 px-2 py-1 rounded text-sm font-mono">$1</code>')
+        .replace(/\n/g, '<br>')
+        .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-violet-400 hover:underline">$1</a>');
+}
+
+function renderToolCalls(toolCalls, expanded = false) {
+    if (!toolCalls || toolCalls.length === 0) return '';
+    
+    return toolCalls.map((tc, idx) => `
+        <div class="tool-call-card bg-secondary/30 border border-border/50 rounded-lg p-3 mb-2">
+            <div class="flex items-center justify-between cursor-pointer" onclick="toggleToolDetail(this)">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="wrench" class="w-4 h-4 text-violet-400"></i>
+                    <span class="font-medium text-sm">${tc.name}</span>
+                    <span class="text-xs text-muted-foreground">tool</span>
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-muted-foreground tool-chevron transition-transform ${expanded ? 'rotate-180' : ''}"></i>
+            </div>
+            <div class="tool-detail mt-2 ${expanded ? '' : 'hidden'}">
+                <div class="text-xs mb-2">
+                    <span class="text-muted-foreground">Input:</span>
+                    <pre class="bg-background/50 p-2 rounded mt-1 overflow-x-auto text-xs font-mono">${JSON.stringify(tc.args || {}, null, 2)}</pre>
+                </div>
+                ${tc.result ? `
+                    <div class="text-xs">
+                        <span class="text-muted-foreground">Output:</span>
+                        <pre class="bg-background/50 p-2 rounded mt-1 overflow-x-auto text-xs font-mono max-h-40 overflow-y-auto">${typeof tc.result === 'string' ? tc.result.substring(0, 500) + (tc.result.length > 500 ? '...' : '') : JSON.stringify(tc.result, null, 2)}</pre>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderResourceCalls(resources) {
+    if (!resources || resources.length === 0) return '';
+    
+    return resources.map(r => `
+        <div class="resource-card bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-2">
+            <div class="flex items-center gap-2">
+                <i data-lucide="database" class="w-4 h-4 text-blue-400"></i>
+                <span class="font-medium text-sm">${r.name || r.uri}</span>
+                <span class="text-xs text-muted-foreground">resource</span>
+            </div>
+            ${r.content ? `
+                <div class="mt-2 text-xs">
+                    <pre class="bg-background/50 p-2 rounded overflow-x-auto font-mono max-h-32 overflow-y-auto">${r.content.substring(0, 300)}${r.content.length > 300 ? '...' : ''}</pre>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function renderTokenStats(stats) {
+    if (!stats) return '';
+    
+    const input = stats.input_tokens || 0;
+    const output = stats.output_tokens || 0;
+    const total = stats.total_tokens || (input + output);
+    const thinking = stats.thinking_tokens || 0;
+    const cacheRead = stats.cache_read_tokens || 0;
+    const cacheWrite = stats.cache_write_tokens || 0;
+    const latency = stats.latency_ms ? (stats.latency_ms / 1000).toFixed(1) + 's' : '';
+    
+    const tooltipContent = `Input: ${input}&#10;Output: ${output}${thinking ? '&#10;Thinking: ' + thinking : ''}${cacheRead ? '&#10;Cache Read: ' + cacheRead : ''}${cacheWrite ? '&#10;Cache Write: ' + cacheWrite : ''}`;
+    
+    return `
+        <div class="stats-bar flex items-center gap-3 text-xs text-muted-foreground mb-3 pb-2 border-b border-border/30">
+            <span class="flex items-center gap-1 cursor-help" title="${tooltipContent}">
+                <i data-lucide="coins" class="w-3 h-3"></i>
+                ${total} tokens
+            </span>
+            ${latency ? `
+                <span class="flex items-center gap-1">
+                    <i data-lucide="clock" class="w-3 h-3"></i>
+                    ${latency}
+                </span>
+            ` : ''}
+        </div>
+    `;
+}
+
+function toggleToolDetail(el) {
+    const detail = el.nextElementSibling;
+    const chevron = el.querySelector('.tool-chevron');
+    if (detail) {
+        detail.classList.toggle('hidden');
+        chevron?.classList.toggle('rotate-180');
+    }
+}
+
+async function sendMessage(event) {
+    event.preventDefault();
+    if (!currentSessionId) {
+        await createSession();
+    }
+    
+    const input = document.getElementById('message-input');
+    const message = input.value.trim();
+    if (!message) return;
+    
+    const filePaths = uploadedFiles.map(f => f.path);
+    
+    input.value = '';
+    uploadedFiles = [];
+    document.getElementById('file-preview').innerHTML = '';
+    
+    const container = document.getElementById('messages');
+    const emptyState = container.querySelector('.text-muted-foreground');
+    if (emptyState && emptyState.closest('.flex.items-center.justify-center')) {
+        container.innerHTML = '';
+    }
+    
+    container.innerHTML += `
+        <div class="message-user flex justify-end">
+            <div class="message-bubble max-w-[75%] p-5 rounded-2xl">
+                <div class="text-base leading-relaxed">${formatMessage(message)}</div>
+            </div>
+        </div>
+    `;
+    
+    const loadingId = 'loading-' + Date.now();
+    container.innerHTML += `
+        <div class="message-assistant flex justify-start" id="${loadingId}">
+            <div class="message-bubble max-w-[75%] p-5 rounded-2xl">
+                <div class="text-base flex items-center gap-3 text-muted-foreground">
+                    <i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i>
+                    思考中...
+                </div>
+            </div>
+        </div>
+    `;
+    container.scrollTop = container.scrollHeight;
+    lucide.createIcons();
+    
+    try {
+        const response = await fetch(`/api/sessions/${currentSessionId}/messages`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                message: message,
+                file_paths: filePaths
+            })
+        });
+        
+        const loadingEl = document.getElementById(loadingId);
+        if (!loadingEl) return;
+        
+        const bubble = loadingEl.querySelector('.message-bubble');
+        let fullContent = '';
+        let toolCalls = [];
+        let stats = null;
+        
+        // Process SSE stream
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+            
+            buffer += decoder.decode(value, {stream: true});
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const data = line.slice(6).trim();
+                if (data === '[DONE]') continue;
+                
+                try {
+                    const event = JSON.parse(data);
+                    
+                    if (event.type === 'content') {
+                        fullContent += event.data;
+                        bubble.innerHTML = `
+                            ${renderToolCalls(toolCalls, true)}
+                            <div class="text-base leading-relaxed">${formatMessage(fullContent)}</div>
+                        `;
+                        container.scrollTop = container.scrollHeight;
+                        lucide.createIcons();
+                    } else if (event.type === 'tool_call') {
+                        toolCalls.push(event.data);
+                        // Show tool calling indicator with details
+                        bubble.innerHTML = `
+                            <div class="tool-call-card bg-secondary/30 border border-border/50 rounded-lg p-3 mb-2">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="loader-2" class="w-4 h-4 text-violet-400 animate-spin"></i>
+                                    <span class="font-medium text-sm">${event.data.name}</span>
+                                    <span class="text-xs text-muted-foreground">calling...</span>
+                                </div>
+                                <div class="mt-2 text-xs">
+                                    <span class="text-muted-foreground">Input:</span>
+                                    <pre class="bg-background/50 p-2 rounded mt-1 overflow-x-auto text-xs font-mono">${JSON.stringify(event.data.args || {}, null, 2)}</pre>
+                                </div>
+                            </div>
+                        `;
+                        lucide.createIcons();
+                    } else if (event.type === 'tool_result') {
+                        // Tool finished, update the tool call with result
+                        const tc = toolCalls.find(t => t.id === event.data.id);
+                        if (tc) tc.result = event.data.result;
+                        // Re-render with result
+                        bubble.innerHTML = `
+                            ${renderToolCalls(toolCalls, true)}
+                            <div class="text-base leading-relaxed">${formatMessage(fullContent)}</div>
+                        `;
+                        lucide.createIcons();
+                    } else if (event.type === 'usage') {
+                        // Collect usage stats
+                        if (!stats) stats = {};
+                        stats.input_tokens = (stats.input_tokens || 0) + (event.data.input_tokens || 0);
+                        stats.output_tokens = (stats.output_tokens || 0) + (event.data.output_tokens || 0);
+                        stats.total_tokens = (stats.total_tokens || 0) + (event.data.total_tokens || 0);
+                    } else if (event.type === 'done') {
+                        // Merge final stats
+                        stats = {...(stats || {}), ...event.data};
+                        // Final render with stats at top
+                        bubble.innerHTML = `
+                            ${renderTokenStats(stats)}
+                            ${renderToolCalls(toolCalls)}
+                            <div class="text-base leading-relaxed">${formatMessage(fullContent)}</div>
+                        `;
+                        lucide.createIcons();
+                    } else if (event.type === 'error') {
+                        bubble.innerHTML = `
+                            <div class="text-base text-destructive flex items-center gap-3">
+                                <i data-lucide="alert-circle" class="w-6 h-6"></i>
+                                错误: ${event.data}
+                            </div>
+                        `;
+                        lucide.createIcons();
+                    }
+                } catch (e) {
+                    console.error('Parse error:', e, data);
+                }
+            }
+        }
+    } catch (error) {
+        const loadingEl = document.getElementById(loadingId);
+        if (loadingEl) {
+            loadingEl.querySelector('.message-bubble').innerHTML = `
+                <div class="text-base text-destructive flex items-center gap-3">
+                    <i data-lucide="alert-circle" class="w-6 h-6"></i>
+                    错误: ${error.message}
+                </div>
+            `;
+            lucide.createIcons();
+        }
+    }
+    
+    container.scrollTop = container.scrollHeight;
+    lucide.createIcons();
+    
+    const sessionItem = document.querySelector(`.session-item[data-id="${currentSessionId}"]`);
+    if (sessionItem && sessionItem.querySelector('.session-title').textContent === 'New Chat') {
+        sessionItem.querySelector('.session-title').textContent = 
+            message.substring(0, 30) + (message.length > 30 ? '...' : '');
+    }
+}
+
+function handleKeyDown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage(event);
+    }
+}
+
+async function handleFileSelect(event) {
+    const files = event.target.files;
+    const preview = document.getElementById('file-preview');
+    
+    for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            uploadedFiles.push(data);
+            
+            preview.innerHTML += `
+                <div class="flex items-center gap-2 bg-card/80 border border-border/50 px-3 py-2 rounded-lg text-sm">
+                    <i data-lucide="file" class="w-5 h-5"></i>
+                    <span class="max-w-40 truncate">${file.name}</span>
+                    <button type="button" class="hover:text-destructive transition-colors" onclick="removeFile('${data.path}', this.parentElement)">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            `;
+            lucide.createIcons();
+        } catch (error) {
+            console.error('Upload failed:', error);
+        }
+    }
+    event.target.value = '';
+}
+
+function removeFile(path, element) {
+    uploadedFiles = uploadedFiles.filter(f => f.path !== path);
+    element.remove();
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // TODO: Add toast notification
+    });
+}
+
+// Auto-resize textarea
+const textarea = document.getElementById('message-input');
+if (textarea) {
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 128) + 'px';
+    });
+}
+
+// Initial load
+loadTools();
+</script>
+{% endblock %}

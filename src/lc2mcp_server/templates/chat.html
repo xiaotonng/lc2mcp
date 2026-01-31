@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Chat - lc2mcp{% endblock %}
+
+{% block content %}
+<!-- Redirect to dashboard -->
+<script>
+    window.location.href = '/dashboard';
+</script>
+<div class="min-h-screen flex items-center justify-center">
+    <div class="text-center">
+        <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto mb-4 text-muted-foreground"></i>
+        <p class="text-muted-foreground">正在跳转到 Dashboard...</p>
+    </div>
+</div>
+{% endblock %}

@@ -412,16 +412,34 @@ def _create_and_register_tool_with_ctx(
     wrapper: Callable[..., Any],
 ) -> None:
     """Create and register a tool that needs context injection."""
+    # Build annotations from model fields + ctx
+    annotations: dict[str, Any] = {"ctx": Context}
+    for field_name, field_info in args_model.model_fields.items():
+        annotations[field_name] = field_info.annotation
+    annotations["return"] = Any
 
-    async def tool_func(ctx, args) -> Any:
-        kwargs = args.model_dump()
+    # Create wrapper that unpacks kwargs
+    async def tool_func(ctx, **kwargs) -> Any:
         return await wrapper(mcp_ctx=ctx, **kwargs)
 
-    # Dynamically set annotations to avoid Python 3.14 forward reference issues
-    # Use Context so FastMCP auto-injects it (not exposed in schema)
-    tool_func.__annotations__ = {"ctx": Context, "args": args_model, "return": Any}
+    tool_func.__annotations__ = annotations
     tool_func.__name__ = name
     tool_func.__doc__ = description
+
+    # Set default values from model
+    import inspect
+    params = [inspect.Parameter("ctx", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=Context)]
+    for field_name, field_info in args_model.model_fields.items():
+        default = field_info.default if field_info.default is not None else inspect.Parameter.empty
+        if field_info.is_required():
+            default = inspect.Parameter.empty
+        params.append(inspect.Parameter(
+            field_name,
+            inspect.Parameter.KEYWORD_ONLY,
+            default=default,
+            annotation=field_info.annotation,
+        ))
+    tool_func.__signature__ = inspect.Signature(params)  # type: ignore[attr-defined]
 
     mcp.tool(name=name, description=description)(tool_func)
 
@@ -434,14 +452,32 @@ def _create_and_register_tool_no_ctx(
     wrapper: Callable[..., Any],
 ) -> None:
     """Create and register a tool without context injection."""
+    # Build annotations from model fields
+    annotations: dict[str, Any] = {}
+    for field_name, field_info in args_model.model_fields.items():
+        annotations[field_name] = field_info.annotation
+    annotations["return"] = Any
 
-    async def tool_func(args) -> Any:
-        kwargs = args.model_dump()
+    async def tool_func(**kwargs) -> Any:
         return await wrapper(**kwargs)
 
-    # Dynamically set annotations to avoid Python 3.14 forward reference issues
-    tool_func.__annotations__ = {"args": args_model, "return": Any}
+    tool_func.__annotations__ = annotations
     tool_func.__name__ = name
     tool_func.__doc__ = description
+
+    # Set default values from model
+    import inspect
+    params = []
+    for field_name, field_info in args_model.model_fields.items():
+        default = field_info.default if field_info.default is not None else inspect.Parameter.empty
+        if field_info.is_required():
+            default = inspect.Parameter.empty
+        params.append(inspect.Parameter(
+            field_name,
+            inspect.Parameter.KEYWORD_ONLY,
+            default=default,
+            annotation=field_info.annotation,
+        ))
+    tool_func.__signature__ = inspect.Signature(params)  # type: ignore[attr-defined]
 
     mcp.tool(name=name, description=description)(tool_func)

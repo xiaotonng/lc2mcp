@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_oauth and user %}授权{% else %}登录{% endif %} - lc2mcp{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center p-4">
+    <div class="card w-full max-w-md p-6">
+        <!-- Logo & Title -->
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 mb-4">
+                <i data-lucide="bot" class="w-6 h-6 text-primary"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight">lc2mcp</h1>
+            <p class="text-sm text-muted-foreground mt-1">
+                {% if is_oauth and user %}
+                应用授权
+                {% else %}
+                登录以继续
+                {% endif %}
+            </p>
+        </div>
+        
+        {% if error %}
+        <div class="mb-4 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+            <p class="text-sm text-destructive flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                {{ error }}
+            </p>
+        </div>
+        {% endif %}
+        
+        {% if is_oauth and user %}
+        <!-- Already logged in, show authorization consent -->
+        <div class="space-y-4">
+            <div class="p-4 rounded-lg bg-secondary/50">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <i data-lucide="link" class="w-5 h-5 text-primary"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">{{ client_id }}</p>
+                        <p class="text-xs text-muted-foreground">请求访问您的账户</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                    <span>登录身份: <span class="text-foreground font-medium">{{ user.display_name }}</span></span>
+                </div>
+            </div>
+            
+            <div class="p-4 rounded-lg border border-border">
+                <h3 class="text-sm font-medium mb-3 flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-green-500"></i>
+                    此应用将能够:
+                </h3>
+                <ul class="space-y-2 text-sm text-muted-foreground">
+                    <li class="flex items-center gap-2">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                        访问您的个人资料
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                        代表您使用聊天工具
+                    </li>
+                </ul>
+            </div>
+            
+            <form method="POST" action="/authorize">
+                <input type="hidden" name="client_id" value="{{ client_id }}">
+                <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
+                <input type="hidden" name="code_challenge" value="{{ code_challenge }}">
+                {% if state %}
+                <input type="hidden" name="state" value="{{ state }}">
+                {% endif %}
+                {% if scope %}
+                <input type="hidden" name="scope" value="{{ scope }}">
+                {% endif %}
+                
+                <div class="flex gap-3 mt-6">
+                    <button type="submit" name="action" value="deny" class="btn btn-outline flex-1">
+                        拒绝
+                    </button>
+                    <button type="submit" name="action" value="authorize" class="btn btn-primary flex-1">
+                        <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                        授权
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        {% else %}
+        <!-- Login Form -->
+        <form method="POST" action="/login" class="space-y-4">
+            {% if is_oauth %}
+            <input type="hidden" name="oauth" value="1">
+            <input type="hidden" name="client_id" value="{{ client_id }}">
+            <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
+            <input type="hidden" name="code_challenge" value="{{ code_challenge }}">
+            {% if state %}
+            <input type="hidden" name="state" value="{{ state }}">
+            {% endif %}
+            {% if scope %}
+            <input type="hidden" name="scope" value="{{ scope }}">
+            {% endif %}
+            {% endif %}
+            
+            <div class="space-y-2">
+                <label for="username" class="text-sm font-medium leading-none">用户名</label>
+                <input type="text" id="username" name="username" required
+                    class="input"
+                    placeholder="请输入用户名">
+            </div>
+            
+            <div class="space-y-2">
+                <label for="password" class="text-sm font-medium leading-none">密码</label>
+                <input type="password" id="password" name="password" required
+                    class="input"
+                    placeholder="请输入密码">
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-full">
+                <i data-lucide="log-in" class="w-4 h-4 mr-2"></i>
+                登录
+            </button>
+        </form>
+        
+        <div class="mt-6 pt-6 border-t border-border">
+            <p class="text-xs text-center text-muted-foreground">
+                演示账号: demo / demo123
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

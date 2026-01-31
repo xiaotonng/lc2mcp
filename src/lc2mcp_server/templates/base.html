@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}lc2mcp{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
+                        primary: {
+                            DEFAULT: "hsl(var(--primary))",
+                            foreground: "hsl(var(--primary-foreground))",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(var(--secondary))",
+                            foreground: "hsl(var(--secondary-foreground))",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(var(--destructive))",
+                            foreground: "hsl(var(--destructive-foreground))",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(var(--muted))",
+                            foreground: "hsl(var(--muted-foreground))",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(var(--accent))",
+                            foreground: "hsl(var(--accent-foreground))",
+                        },
+                        card: {
+                            DEFAULT: "hsl(var(--card))",
+                            foreground: "hsl(var(--card-foreground))",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "0.5rem",
+                        md: "calc(0.5rem - 2px)",
+                        sm: "calc(0.5rem - 4px)",
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Light theme */
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 240 10% 3.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 240 10% 3.9%;
+            --primary: 240 5.9% 10%;
+            --primary-foreground: 0 0% 98%;
+            --secondary: 240 4.8% 95.9%;
+            --secondary-foreground: 240 5.9% 10%;
+            --muted: 240 4.8% 95.9%;
+            --muted-foreground: 240 3.8% 46.1%;
+            --accent: 240 4.8% 95.9%;
+            --accent-foreground: 240 5.9% 10%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 240 5.9% 90%;
+            --input: 240 5.9% 90%;
+            --ring: 240 5.9% 10%;
+        }
+
+        /* Dark theme */
+        .dark {
+            --background: 240 10% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 240 10% 3.9%;
+            --card-foreground: 0 0% 98%;
+            --primary: 0 0% 98%;
+            --primary-foreground: 240 5.9% 10%;
+            --secondary: 240 3.7% 15.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 240 3.7% 15.9%;
+            --muted-foreground: 240 5% 64.9%;
+            --accent: 240 3.7% 15.9%;
+            --accent-foreground: 0 0% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 240 3.7% 15.9%;
+            --input: 240 3.7% 15.9%;
+            --ring: 240 4.9% 83.9%;
+        }
+    </style>
+    <style type="text/tailwindcss">
+        @layer base {
+            * {
+                @apply border-border;
+            }
+            body {
+                @apply bg-background text-foreground;
+            }
+        }
+        @layer components {
+            .btn {
+                @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+            }
+            .btn-primary {
+                @apply bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2;
+            }
+            .btn-secondary {
+                @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2;
+            }
+            .btn-ghost {
+                @apply hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2;
+            }
+            .btn-destructive {
+                @apply bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2;
+            }
+            .btn-outline {
+                @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2;
+            }
+            .btn-sm {
+                @apply h-9 rounded-md px-3;
+            }
+            .btn-icon {
+                @apply h-10 w-10;
+            }
+            .input {
+                @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+            }
+            .card {
+                @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+            }
+            .badge {
+                @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+            }
+            .badge-default {
+                @apply border-transparent bg-primary text-primary-foreground hover:bg-primary/80;
+            }
+            .badge-secondary {
+                @apply border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80;
+            }
+        }
+    </style>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script>
+        // Theme management - run before page renders to prevent flash
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                // Default to dark mode
+                document.documentElement.classList.add('dark');
+                if (!theme) localStorage.setItem('theme', 'dark');
+            }
+        })();
+    </script>
+    {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen antialiased">
+    {% block content %}{% endblock %}
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Theme toggle function
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            
+            // Update icon
+            updateThemeIcon();
+        }
+        
+        function updateThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const sunIcon = document.getElementById('theme-sun');
+            const moonIcon = document.getElementById('theme-moon');
+            
+            if (sunIcon && moonIcon) {
+                if (isDark) {
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                } else {
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                }
+            }
+        }
+        
+        // Update icon on page load
+        document.addEventListener('DOMContentLoaded', updateThemeIcon);
+        
+        // ===== Language/i18n System =====
+        const i18n = {
+            zh: {
+                // Navigation
+                nav_tools: '工具管理',
+                nav_connections: '连接管理',
+                nav_debug: '调试中心',
+                online: '在线',
+                logout: '退出登录',
+                
+                // Tools page
+                tools_title: '工具管理',
+                tools_desc: '查看所有注册的 MCP 工具和资源',
+                registered_tools: '已注册工具',
+                tools_callable: '可供 MCP 客户端调用',
+                registered_resources: '已注册资源',
+                resources_endpoints: 'MCP 资源端点',
+                no_tools: '暂无工具',
+                no_resources: '暂无资源',
+                loading: '加载中...',
+                
+                // Connections page
+                connections_title: '连接管理',
+                connections_desc: '管理 MCP 平台连接和 OAuth 授权',
+                mcp_info: '服务器配置',
+                server_config_desc: 'MCP Server 连接信息',
+                server_url: '服务器 URL',
+                oauth_metadata: 'OAuth 元数据',
+                oauth_enabled: 'OAuth 已启用',
+                oauth_enabled_full: 'OAuth 2.1 已启用',
+                secure_auth: '安全认证已开启',
+                copy: '复制',
+                copied: '已复制',
+                platforms: '平台连接状态',
+                platforms_desc: '支持的 MCP 客户端平台',
+                connected: '已连接',
+                not_connected: '未连接',
+                never_connected: '从未连接',
+                call_count: '调用次数',
+                last_call: '最后调用',
+                
+                // Debug page
+                session_list: '会话列表',
+                new: '新建',
+                delete: '删除',
+                select_model: '选择模型',
+                model_config: '模型配置',
+                preset_models: '预设模型',
+                custom_models: '自定义模型',
+                add: '添加',
+                no_custom_models: '暂无自定义模型',
+                click_add_model: '点击上方"添加"按钮配置自定义模型',
+                add_custom_model: '添加自定义模型',
+                edit_model: '编辑模型',
+                model_name: '模型名称',
+                base_url: 'API 地址',
+                api_key: 'API Key',
+                model_id: '模型 ID',
+                cancel: '取消',
+                save: '保存',
+                
+                // Chat
+                start_chat: '开始新对话',
+                type_message: '在下方输入消息开始对话',
+                input_placeholder: '输入消息，按 Enter 发送...',
+                send: '发送',
+                upload_file: '上传文件',
+                
+                // Tool/Resource detail
+                params: '参数',
+                source_code: '源代码',
+                preview: '预览',
+                uri: 'URI',
+                
+                // Misc
+                configure: '配置',
+                configured: '已配置',
+                not_configured: '未配置',
+            },
+            en: {
+                // Navigation
+                nav_tools: 'Tools',
+                nav_connections: 'Connections',
+                nav_debug: 'Debug',
+                online: 'Online',
+                logout: 'Logout',
+                
+                // Tools page
+                tools_title: 'Tools',
+                tools_desc: 'View all registered MCP tools and resources',
+                registered_tools: 'Registered Tools',
+                tools_callable: 'Available for MCP clients',
+                registered_resources: 'Registered Resources',
+                resources_endpoints: 'MCP resource endpoints',
+                no_tools: 'No tools',
+                no_resources: 'No resources',
+                loading: 'Loading...',
+                
+                // Connections page
+                connections_title: 'Connections',
+                connections_desc: 'Manage MCP platform connections and OAuth',
+                mcp_info: 'Server Config',
+                server_config_desc: 'MCP Server connection info',
+                server_url: 'Server URL',
+                oauth_metadata: 'OAuth Metadata',
+                oauth_enabled: 'OAuth Enabled',
+                oauth_enabled_full: 'OAuth 2.1 Enabled',
+                secure_auth: 'Secure authentication enabled',
+                copy: 'Copy',
+                copied: 'Copied',
+                platforms: 'Platform Status',
+                platforms_desc: 'Supported MCP client platforms',
+                connected: 'Connected',
+                not_connected: 'Not connected',
+                never_connected: 'Never connected',
+                call_count: 'Calls',
+                last_call: 'Last call',
+                
+                // Debug page
+                session_list: 'Sessions',
+                new: 'New',
+                delete: 'Delete',
+                select_model: 'Select Model',
+                model_config: 'Model Config',
+                preset_models: 'Preset Models',
+                custom_models: 'Custom Models',
+                add: 'Add',
+                no_custom_models: 'No custom models',
+                click_add_model: 'Click "Add" to configure a custom model',
+                add_custom_model: 'Add Custom Model',
+                edit_model: 'Edit Model',
+                model_name: 'Model Name',
+                base_url: 'API URL',
+                api_key: 'API Key',
+                model_id: 'Model ID',
+                cancel: 'Cancel',
+                save: 'Save',
+                
+                // Chat
+                start_chat: 'Start a conversation',
+                type_message: 'Type a message below to begin',
+                input_placeholder: 'Type a message, press Enter to send...',
+                send: 'Send',
+                upload_file: 'Upload file',
+                
+                // Tool/Resource detail
+                params: 'Parameters',
+                source_code: 'Source Code',
+                preview: 'Preview',
+                uri: 'URI',
+                
+                // Misc
+                configure: 'Configure',
+                configured: 'Configured',
+                not_configured: 'Not configured',
+            }
+        };
+        
+        let currentLang = localStorage.getItem('lang') || 'zh';
+        
+        function t(key) {
+            return i18n[currentLang][key] || i18n['zh'][key] || key;
+        }
+        
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            localStorage.setItem('lang', currentLang);
+            applyLanguage();
+        }
+        
+        function applyLanguage() {
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[currentLang][key]) {
+                    el.textContent = i18n[currentLang][key];
+                }
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (i18n[currentLang][key]) {
+                    el.placeholder = i18n[currentLang][key];
+                }
+            });
+            
+            // Update titles
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                const key = el.getAttribute('data-i18n-title');
+                if (i18n[currentLang][key]) {
+                    el.title = i18n[currentLang][key];
+                }
+            });
+            
+            // Update language label
+            const langLabel = document.getElementById('lang-label');
+            if (langLabel) {
+                langLabel.textContent = currentLang === 'zh' ? '中文' : 'EN';
+            }
+        }
+        
+        // Apply language on page load
+        document.addEventListener('DOMContentLoaded', applyLanguage);
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

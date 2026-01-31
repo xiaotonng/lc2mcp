@@ -1,0 +1,52 @@
+# lc2mcp-server 配置文件
+# 所有配置项都可以通过环境变量覆盖
+
+# 服务器配置
+server:
+  host: "0.0.0.0"
+  port: 8000
+  debug: false
+  # 公开访问的 URL (用于 OAuth 回调，部署时需要设置)
+  base_url: ""
+
+# 安全配置
+security:
+  # JWT/Session 加密密钥 (生产环境必须修改!)
+  secret_key: "dev-secret-key-change-in-production"
+  # Access token 过期时间 (分钟)
+  access_token_expire_minutes: 1440  # 24 hours
+
+# OAuth 配置 (用于 ChatGPT 等外部平台集成)
+oauth:
+  client_id: "chatgpt-client"
+  client_secret: "chatgpt-secret-change-in-production"
+
+# 数据库配置
+database:
+  url: "sqlite+aiosqlite:///./lc2mcp.db"
+
+# 文件上传配置
+upload:
+  dir: "./uploads"
+  max_size_mb: 10
+
+# Demo 用户配置 (首次启动自动创建)
+demo_user:
+  username: "demo"
+  password: "demo123"
+  display_name: "Demo User"
+  email: "demo@example.com"
+
+# 工具配置
+tools:
+  # 外部工具目录列表 (绝对路径)
+  # 这些目录中的 LangChain 工具会被自动扫描并加载
+  external_dirs: []
+  # - "/path/to/custom/tools"
+
+# 资源配置
+resources:
+  # 外部资源目录列表 (绝对路径)
+  # 这些目录中的 FastMCP resources 会被自动扫描并加载
+  external_dirs: []
+  # - "/path/to/custom/resources"
