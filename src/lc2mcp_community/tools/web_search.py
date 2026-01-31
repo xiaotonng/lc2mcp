@@ -1,7 +1,7 @@
 """Web search tool using DuckDuckGo."""
 
-from langchain_core.tools import tool
 from langchain.tools import ToolRuntime
+from langchain_core.tools import tool
 
 from lc2mcp_community.context import ChatContext, get_context
 

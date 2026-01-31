@@ -1,7 +1,7 @@
 """Common context types for lc2mcp-community tools."""
 
 from dataclasses import dataclass, field
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from langchain.tools import ToolRuntime
@@ -33,12 +33,12 @@ class ChatContext:
 def get_context(runtime: "ToolRuntime[ChatContext]") -> Optional[ChatContext]:
     """
     Extract ChatContext from ToolRuntime.
-    
+
     This is a common utility for all tools to get context from runtime.
-    
+
     Args:
         runtime: The ToolRuntime instance passed to the tool
-        
+
     Returns:
         ChatContext if available, None otherwise
     """
@@ -52,13 +52,13 @@ def get_context(runtime: "ToolRuntime[ChatContext]") -> Optional[ChatContext]:
 def extract_user_id_from_mcp_context(ctx) -> Optional[int]:
     """
     Extract user_id from MCP Context (OAuth token).
-    
+
     This is a shared utility for extracting user_id from FastMCP Context
     objects, typically from OAuth Bearer token claims.
-    
+
     Args:
         ctx: FastMCP Context object
-        
+
     Returns:
         user_id as int if found, None otherwise
     """

@@ -428,17 +428,20 @@ def _create_and_register_tool_with_ctx(
 
     # Set default values from model
     import inspect
+
     params = [inspect.Parameter("ctx", inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=Context)]
     for field_name, field_info in args_model.model_fields.items():
         default = field_info.default if field_info.default is not None else inspect.Parameter.empty
         if field_info.is_required():
             default = inspect.Parameter.empty
-        params.append(inspect.Parameter(
-            field_name,
-            inspect.Parameter.KEYWORD_ONLY,
-            default=default,
-            annotation=field_info.annotation,
-        ))
+        params.append(
+            inspect.Parameter(
+                field_name,
+                inspect.Parameter.KEYWORD_ONLY,
+                default=default,
+                annotation=field_info.annotation,
+            )
+        )
     tool_func.__signature__ = inspect.Signature(params)  # type: ignore[attr-defined]
 
     mcp.tool(name=name, description=description)(tool_func)
@@ -467,17 +470,20 @@ def _create_and_register_tool_no_ctx(
 
     # Set default values from model
     import inspect
+
     params = []
     for field_name, field_info in args_model.model_fields.items():
         default = field_info.default if field_info.default is not None else inspect.Parameter.empty
         if field_info.is_required():
             default = inspect.Parameter.empty
-        params.append(inspect.Parameter(
-            field_name,
-            inspect.Parameter.KEYWORD_ONLY,
-            default=default,
-            annotation=field_info.annotation,
-        ))
+        params.append(
+            inspect.Parameter(
+                field_name,
+                inspect.Parameter.KEYWORD_ONLY,
+                default=default,
+                annotation=field_info.annotation,
+            )
+        )
     tool_func.__signature__ = inspect.Signature(params)  # type: ignore[attr-defined]
 
     mcp.tool(name=name, description=description)(tool_func)

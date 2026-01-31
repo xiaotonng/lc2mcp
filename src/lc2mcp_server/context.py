@@ -40,7 +40,7 @@ async def get_user_info_by_id(user_id: int) -> Optional[UserInfo]:
 def _get_user_id(mcp_ctx: Context) -> Optional[int]:
     """
     Extract user_id from MCP Context.
-    
+
     Sources (in order):
     1. OAuth Bearer token (via request.user.access_token.claims)
     2. State set by the application (via mcp_ctx.get_state)

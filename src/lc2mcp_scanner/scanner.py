@@ -26,6 +26,7 @@ def is_langchain_tool(obj: Any) -> bool:
     # Check for StructuredTool or BaseTool
     try:
         from langchain_core.tools import BaseTool as LCBaseTool
+
         if isinstance(obj, LCBaseTool):
             return True
     except ImportError:
@@ -47,15 +48,16 @@ def is_fastmcp_tool(obj: Any) -> bool:
     """
     if callable(obj) and hasattr(obj, "_mcp_tool"):
         return True
-    
+
     # Also check for Tool class instances from fastmcp
     try:
         from fastmcp.tools import Tool as FastMCPTool
+
         if isinstance(obj, FastMCPTool):
             return True
     except ImportError:
         pass
-    
+
     return False
 
 
@@ -116,10 +118,7 @@ def _iter_python_files(directory: Path, recursive: bool = True) -> list[Path]:
     files = list(directory.glob(pattern))
 
     # Filter out __pycache__, __init__.py (unless it contains tools)
-    return [
-        f for f in files
-        if "__pycache__" not in str(f) and f.name != "__init__.py"
-    ]
+    return [f for f in files if "__pycache__" not in str(f) and f.name != "__init__.py"]
 
 
 def scan_tools(
@@ -263,7 +262,9 @@ def scan_resources(
                             if name not in seen_names:
                                 registrars.append(obj)
                                 seen_names.add(name)
-                                logger.info(f"Discovered resource registrar: {name} from {file_path}")
+                                logger.info(
+                                    f"Discovered resource registrar: {name} from {file_path}"
+                                )
                     except (ValueError, TypeError):
                         continue
 

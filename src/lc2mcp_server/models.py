@@ -63,31 +63,31 @@ class Conversation(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     session_id: Mapped[int] = mapped_column(Integer, ForeignKey("sessions.id"), nullable=False)
-    
+
     # Input
     input: Mapped[str] = mapped_column(Text, nullable=False)  # User message
     input_files: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)  # Uploaded file paths
-    
+
     # Output
     output: Mapped[str] = mapped_column(Text, nullable=False)  # AI response
-    
+
     # Tool calls: [{name, args, result, latency_ms}]
     tool_calls: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
-    
+
     # Model info
     model: Mapped[str] = mapped_column(String(50), nullable=False)  # Model used
-    
+
     # Token usage
     input_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     output_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     total_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    
+
     # Cost (in USD or credits)
     cost: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    
+
     # Performance
     latency_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Total response time
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )
@@ -137,7 +137,9 @@ class MCPConnection(Base):
     __tablename__ = "mcp_connections"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    platform_id: Mapped[str] = mapped_column(String(50), nullable=False)  # chatgpt, cursor, claude, etc.
+    platform_id: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # chatgpt, cursor, claude, etc.
     client_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     last_call_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
@@ -160,11 +162,19 @@ class ModelConfig(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)  # Display name
-    provider: Mapped[str] = mapped_column(String(50), nullable=False)  # openai, google, openrouter, custom
-    model_id: Mapped[str] = mapped_column(String(100), nullable=False)  # gpt-5.2, gemini-3-pro, etc.
-    base_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)  # Custom API base URL
+    provider: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # openai, google, openrouter, custom
+    model_id: Mapped[str] = mapped_column(
+        String(100), nullable=False
+    )  # gpt-5.2, gemini-3-pro, etc.
+    base_url: Mapped[Optional[str]] = mapped_column(
+        String(500), nullable=True
+    )  # Custom API base URL
     api_key: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)  # Encrypted API key
-    is_preset: Mapped[bool] = mapped_column(Boolean, default=False)  # Whether this is a preset model
+    is_preset: Mapped[bool] = mapped_column(
+        Boolean, default=False
+    )  # Whether this is a preset model
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     config: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)  # Extra configuration
     created_at: Mapped[datetime] = mapped_column(

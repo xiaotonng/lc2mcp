@@ -2,7 +2,6 @@
 
 import os
 import uuid
-from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
@@ -198,7 +197,7 @@ async def login_page(
 ):
     """Login page - also handles OAuth authorization."""
     is_oauth = oauth == "1" and client_id and redirect_uri
-    
+
     # If user is logged in and this is OAuth, show consent view
     if user and is_oauth:
         return templates.TemplateResponse(
@@ -214,11 +213,11 @@ async def login_page(
                 "scope": scope,
             },
         )
-    
+
     # If user is logged in (not OAuth), go to chat
     if user:
         return RedirectResponse(url="/chat", status_code=302)
-    
+
     # Show login form (with OAuth params if present)
     return templates.TemplateResponse(
         "login.html",
@@ -249,7 +248,7 @@ async def login(
 ):
     """Handle login form submission."""
     is_oauth = oauth == "1" and client_id and redirect_uri
-    
+
     user = await authenticate_user(username, password)
     if not user:
         return templates.TemplateResponse(
@@ -273,6 +272,7 @@ async def login(
     # If OAuth, redirect back to login page to show consent
     if is_oauth:
         from urllib.parse import urlencode
+
         params = {
             "oauth": "1",
             "client_id": client_id,
@@ -300,9 +300,10 @@ async def authorize_submit(
     user: User = Depends(require_user),
 ):
     """Handle OAuth authorization consent."""
-    from urllib.parse import urlencode
     import secrets
     import time
+    from urllib.parse import urlencode
+
     from .database import get_db_session
     from .models import OAuthCode
 
@@ -355,7 +356,7 @@ async def dashboard_page(request: Request, user: User = Depends(require_user), t
     # Validate tab
     if tab not in ("tools", "connections", "debug"):
         tab = "tools"
-    
+
     sessions = await get_user_sessions(user.id)
     return templates.TemplateResponse(
         "dashboard.html",
@@ -436,7 +437,7 @@ async def send_message(
     user: User = Depends(require_user),
 ):
     """Send a message and stream AI response with tool calls (SSE).
-    
+
     Returns SSE events:
     - data: {"type": "content", "data": "text chunk"}
     - data: {"type": "tool_call", "data": {"name": "...", "args": {...}}}
@@ -446,7 +447,7 @@ async def send_message(
     - data: [DONE]
     """
     import json
-    
+
     session = await get_session(session_id)
     if not session or session.user_id != user.id:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -541,6 +542,7 @@ async def upload_file(
 async def get_mcp_tools(user: User = Depends(require_user)):
     """Get list of registered MCP tools."""
     import inspect
+
     from lc2mcp_community.tools import ALL_TOOLS
 
     tools = []
@@ -550,13 +552,15 @@ async def get_mcp_tools(user: User = Depends(require_user)):
             source = inspect.getsource(tool.func)
         except Exception:
             source = "# Source code not available"
-        
-        tools.append({
-            "name": tool.name,
-            "description": tool.description or "",
-            "args": list(tool.args.keys()) if hasattr(tool, "args") else [],
-            "source": source,
-        })
+
+        tools.append(
+            {
+                "name": tool.name,
+                "description": tool.description or "",
+                "args": list(tool.args.keys()) if hasattr(tool, "args") else [],
+                "source": source,
+            }
+        )
     return {"tools": tools}
 
 
@@ -570,12 +574,16 @@ async def get_mcp_resources(user: User = Depends(require_user)):
     # FastMCP stores resources internally
     if hasattr(mcp, "_resource_manager") and mcp._resource_manager:
         for uri, resource in mcp._resource_manager._resources.items():
-            resources.append({
-                "uri": uri,
-                "name": resource.name if hasattr(resource, "name") else str(uri),
-                "description": resource.description if hasattr(resource, "description") else "",
-                "mime_type": resource.mime_type if hasattr(resource, "mime_type") else "text/plain",
-            })
+            resources.append(
+                {
+                    "uri": uri,
+                    "name": resource.name if hasattr(resource, "name") else str(uri),
+                    "description": resource.description if hasattr(resource, "description") else "",
+                    "mime_type": resource.mime_type
+                    if hasattr(resource, "mime_type")
+                    else "text/plain",
+                }
+            )
     return {"resources": resources}
 
 
@@ -587,8 +595,11 @@ async def preview_mcp_resource(uri: str, user: User = Depends(require_user)):
         html_content = f"""
 <div style="font-family: system-ui; padding: 20px; max-width: 400px;">
     <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
-        <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: bold;">
-            {user.display_name[0] if user.display_name else 'U'}
+        <div style="width: 64px; height: 64px; border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 24px; font-weight: bold;">
+            {user.display_name[0] if user.display_name else "U"}
         </div>
         <div>
             <h2 style="margin: 0; font-size: 20px;">{user.display_name}</h2>
@@ -598,29 +609,32 @@ async def preview_mcp_resource(uri: str, user: User = Depends(require_user)):
     <div style="background: rgba(128,128,128,0.1); border-radius: 12px; padding: 16px;">
         <div style="display: grid; gap: 12px;">
             <div><span style="color: #888;">用户ID：</span>{user.id}</div>
-            <div><span style="color: #888;">邮箱：</span>{user.email or '未设置'}</div>
-            <div><span style="color: #888;">年龄：</span>{user.age or '未设置'}</div>
-            <div><span style="color: #888;">性别：</span>{user.gender or '未设置'}</div>
+            <div><span style="color: #888;">邮箱：</span>{user.email or "未设置"}</div>
+            <div><span style="color: #888;">年龄：</span>{user.age or "未设置"}</div>
+            <div><span style="color: #888;">性别：</span>{user.gender or "未设置"}</div>
         </div>
     </div>
 </div>
 """
         return {"content": html_content, "mime_type": "text/html"}
-    
+
     # For other resources, try to execute
     from .main import mcp
-    
+
     if hasattr(mcp, "_resource_manager") and mcp._resource_manager:
         if uri in mcp._resource_manager._resources:
             resource = mcp._resource_manager._resources[uri]
             try:
                 if hasattr(resource, "fn"):
                     result = await resource.fn() if callable(resource.fn) else str(resource.fn)
-                    return {"content": result, "mime_type": getattr(resource, "mime_type", "text/plain")}
+                    return {
+                        "content": result,
+                        "mime_type": getattr(resource, "mime_type", "text/plain"),
+                    }
                 return {"content": "Resource preview not available", "mime_type": "text/plain"}
             except Exception as e:
                 return {"content": f"Error: {str(e)}", "mime_type": "text/plain"}
-    
+
     raise HTTPException(status_code=404, detail="Resource not found")
 
 
@@ -637,12 +651,16 @@ async def get_mcp_platforms(user: User = Depends(require_user)):
     platforms = []
     for platform in MCP_PLATFORMS:
         conn = connection_map.get(platform["id"])
-        platforms.append({
-            **platform,
-            "is_connected": conn.is_connected if conn else False,
-            "last_call_at": conn.last_call_at.isoformat() if conn and conn.last_call_at else None,
-            "call_count": conn.call_count if conn else 0,
-        })
+        platforms.append(
+            {
+                **platform,
+                "is_connected": conn.is_connected if conn else False,
+                "last_call_at": conn.last_call_at.isoformat()
+                if conn and conn.last_call_at
+                else None,
+                "call_count": conn.call_count if conn else 0,
+            }
+        )
 
     return {"platforms": platforms}
 
@@ -691,50 +709,51 @@ PRESET_MODELS = [
 async def list_models(user: User = Depends(require_user)):
     """List all available models (presets + user configured)."""
     async with get_db_session() as db:
-        result = await db.execute(
-            select(ModelConfig).where(ModelConfig.user_id == user.id)
-        )
+        result = await db.execute(select(ModelConfig).where(ModelConfig.user_id == user.id))
         user_models = result.scalars().all()
 
     # Combine presets with user models
     models = []
-    
+
     # Add presets
     for preset in PRESET_MODELS:
         # Check if user has API key configured for this preset
         user_config = next(
-            (m for m in user_models if m.model_id == preset["model_id"] and m.is_preset),
-            None
+            (m for m in user_models if m.model_id == preset["model_id"] and m.is_preset), None
         )
-        models.append({
-            "id": preset["model_id"],
-            "name": preset["name"],
-            "provider": preset["provider"],
-            "model_id": preset["model_id"],
-            "is_preset": True,
-            "is_enabled": user_config.is_enabled if user_config else True,
-            "has_api_key": bool(user_config and user_config.api_key),
-            "icon": preset.get("icon", "cpu"),
-            "color": preset.get("color", "gray"),
-            "config_id": user_config.id if user_config else None,
-        })
+        models.append(
+            {
+                "id": preset["model_id"],
+                "name": preset["name"],
+                "provider": preset["provider"],
+                "model_id": preset["model_id"],
+                "is_preset": True,
+                "is_enabled": user_config.is_enabled if user_config else True,
+                "has_api_key": bool(user_config and user_config.api_key),
+                "icon": preset.get("icon", "cpu"),
+                "color": preset.get("color", "gray"),
+                "config_id": user_config.id if user_config else None,
+            }
+        )
 
     # Add custom models
     for model in user_models:
         if not model.is_preset:
-            models.append({
-                "id": model.id,
-                "name": model.name,
-                "provider": model.provider,
-                "model_id": model.model_id,
-                "base_url": model.base_url,
-                "is_preset": False,
-                "is_enabled": model.is_enabled,
-                "has_api_key": bool(model.api_key),
-                "icon": "settings-2",
-                "color": "purple",
-                "config_id": model.id,
-            })
+            models.append(
+                {
+                    "id": model.id,
+                    "name": model.name,
+                    "provider": model.provider,
+                    "model_id": model.model_id,
+                    "base_url": model.base_url,
+                    "is_preset": False,
+                    "is_enabled": model.is_enabled,
+                    "has_api_key": bool(model.api_key),
+                    "icon": "settings-2",
+                    "color": "purple",
+                    "config_id": model.id,
+                }
+            )
 
     return {"models": models}
 
@@ -778,13 +797,10 @@ async def update_model(
     """Update a model configuration."""
     async with get_db_session() as db:
         result = await db.execute(
-            select(ModelConfig).where(
-                ModelConfig.id == model_id,
-                ModelConfig.user_id == user.id
-            )
+            select(ModelConfig).where(ModelConfig.id == model_id, ModelConfig.user_id == user.id)
         )
         model = result.scalar_one_or_none()
-        
+
         if not model:
             raise HTTPException(status_code=404, detail="Model not found")
 
@@ -814,16 +830,13 @@ async def delete_model(
     """Delete a model configuration."""
     async with get_db_session() as db:
         result = await db.execute(
-            select(ModelConfig).where(
-                ModelConfig.id == model_id,
-                ModelConfig.user_id == user.id
-            )
+            select(ModelConfig).where(ModelConfig.id == model_id, ModelConfig.user_id == user.id)
         )
         model = result.scalar_one_or_none()
-        
+
         if not model:
             raise HTTPException(status_code=404, detail="Model not found")
-        
+
         if model.is_preset:
             raise HTTPException(status_code=400, detail="Cannot delete preset models")
 
@@ -849,7 +862,7 @@ async def configure_preset_model(
             select(ModelConfig).where(
                 ModelConfig.user_id == user.id,
                 ModelConfig.model_id == model_id,
-                ModelConfig.is_preset == True
+                ModelConfig.is_preset.is_(True),
             )
         )
         existing = result.scalar_one_or_none()

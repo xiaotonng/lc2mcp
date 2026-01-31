@@ -6,7 +6,6 @@ from fastmcp import Context, FastMCP
 
 from lc2mcp_community.context import UserInfo, extract_user_id_from_mcp_context
 
-
 # Default user info fetcher (returns None, should be overridden)
 _user_info_fetcher: Optional[Callable[[int], UserInfo | None]] = None
 
@@ -180,15 +179,15 @@ def _profile_html(user_info: UserInfo) -> str:
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-label">Email</div>
-                <div class="info-value">{user_info.email or 'Not set'}</div>
+                <div class="info-value">{user_info.email or "Not set"}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Age</div>
-                <div class="info-value">{user_info.age or 'Not set'}</div>
+                <div class="info-value">{user_info.age or "Not set"}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Gender</div>
-                <div class="info-value">{user_info.gender or 'Not set'}</div>
+                <div class="info-value">{user_info.gender or "Not set"}</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Status</div>

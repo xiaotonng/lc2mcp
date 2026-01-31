@@ -13,19 +13,18 @@ from fastmcp import FastMCP
 from starlette.middleware.sessions import SessionMiddleware
 
 from lc2mcp import register_tools
+from lc2mcp_community.tools import ALL_TOOLS
 from lc2mcp_scanner import scan_resources, scan_tools
+
+from .config import config
+from .context import get_user_info_by_id, runtime_adapter
+from .database import init_db
+from .oauth_provider import CustomOAuthProvider
+from .routes import api_router, router
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("mcp-debug")
-
-from lc2mcp_community.tools import ALL_TOOLS
-
-from .config import config
-from .context import runtime_adapter, get_user_info_by_id
-from .database import init_db
-from .oauth_provider import CustomOAuthProvider
-from .routes import api_router, router
 
 
 async def create_demo_user():
@@ -81,23 +80,23 @@ async def mcp_logging_middleware(request: Request, call_next):
 def load_tools() -> list:
     """
     Load tools using lc2mcp_scanner.scan_tools().
-    
+
     Scans community and external directories for LangChain tools.
     """
     import lc2mcp_community.tools as community_tools_module
-    
+
     community_tools_dir = Path(community_tools_module.__file__).parent
-    
+
     # Collect directories to scan
     dirs_to_scan = [community_tools_dir]
     logger.info(f"Added community tools directory: {community_tools_dir}")
-    
+
     for ext_dir in config.tools.external_dirs:
         ext_path = Path(ext_dir)
         if ext_path.exists():
             dirs_to_scan.append(ext_path)
             logger.info(f"Added external tools directory: {ext_path}")
-    
+
     # Use lc2mcp_scanner.scan_tools() to discover tools
     tools = scan_tools(dirs_to_scan, recursive=True, include_init=True)
     logger.info(f"Loaded {len(tools)} tools: {[t.name for t in tools]}")
@@ -107,23 +106,23 @@ def load_tools() -> list:
 def load_resources() -> list:
     """
     Load resource registrars using lc2mcp_scanner.scan_resources().
-    
+
     Scans community and external directories for register_xxx(mcp) functions.
     """
     import lc2mcp_community.resources as community_resources_module
-    
+
     community_resources_dir = Path(community_resources_module.__file__).parent
-    
+
     # Collect directories to scan
     dirs_to_scan = [community_resources_dir]
     logger.info(f"Added community resources directory: {community_resources_dir}")
-    
+
     for ext_dir in config.resources.external_dirs:
         ext_path = Path(ext_dir)
         if ext_path.exists():
             dirs_to_scan.append(ext_path)
             logger.info(f"Added external resources directory: {ext_path}")
-    
+
     # Use lc2mcp_scanner.scan_resources() to discover registrars
     registrars = scan_resources(dirs_to_scan, recursive=True)
     logger.info(f"Loaded {len(registrars)} resource registrars")
@@ -134,15 +133,16 @@ def create_mcp() -> FastMCP:
     """Create and configure the MCP server with OAuth authentication."""
     # Set up user info fetcher for community resources
     from lc2mcp_community.resources.user_profile import set_user_info_fetcher
+
     set_user_info_fetcher(get_user_info_by_id)
-    
+
     # Get base URL from config or environment
     # This is required for OAuth metadata endpoints
     base_url = config.base_url
     if not base_url:
         # Fallback to local URL if not configured
         base_url = f"http://{config.host}:{config.port}"
-    
+
     # Create OAuth provider - provides complete OAuth 2.1 server
     # Includes: /.well-known/oauth-authorization-server, /authorize, /token
     oauth_provider = CustomOAuthProvider(base_url=base_url)
@@ -152,7 +152,7 @@ def create_mcp() -> FastMCP:
 
     # Load tools dynamically from configured directories
     tools = load_tools()
-    
+
     # Register tools with runtime_adapter for context injection
     register_tools(
         mcp,
@@ -179,7 +179,7 @@ async def lifespan(app: FastAPI):
     # Initialize database
     await init_db()
     await create_demo_user()
-    
+
     # Run MCP lifespan
     async with mcp_http_app.lifespan(app):
         yield

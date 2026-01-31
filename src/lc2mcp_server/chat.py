@@ -5,7 +5,6 @@ import time
 from typing import AsyncIterator, Optional
 
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
-from langchain_core.tools import BaseTool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from sqlalchemy import select
@@ -14,7 +13,7 @@ from lc2mcp_community.tools import ALL_TOOLS
 from lc2mcp_scanner import scan_tools
 
 from .config import config
-from .context import ChatContext, UserInfo
+from .context import UserInfo
 from .database import async_session, get_db_session
 from .models import Conversation, Session
 
@@ -40,34 +39,36 @@ def get_llm(model: str, streaming: bool = False):
             temperature=0.3,
         )
 
+
 def get_tools() -> list:
     """
     Get available tools for the chat agent.
-    
+
     Uses lc2mcp_scanner.scan_tools() to discover tools from community and external directories.
-    
+
     Returns:
         List of LangChain tools
     """
     global _cached_tools
-    
+
     if _cached_tools is not None:
         return _cached_tools
-    
+
     from pathlib import Path
+
     import lc2mcp_community.tools as community_tools_module
-    
+
     community_tools_dir = Path(community_tools_module.__file__).parent
     dirs_to_scan = [community_tools_dir]
-    
+
     for ext_dir in config.tools.external_dirs:
         ext_path = Path(ext_dir)
         if ext_path.exists():
             dirs_to_scan.append(ext_path)
-    
+
     _cached_tools = scan_tools(dirs_to_scan, recursive=True, include_init=True)
     logger.info(f"Using {len(_cached_tools)} tools: {[t.name for t in _cached_tools]}")
-    
+
     return _cached_tools if _cached_tools else ALL_TOOLS
 
 
@@ -151,9 +152,7 @@ async def get_user_sessions(user_id: int) -> list[Session]:
     """Get all sessions for a user."""
     async with async_session() as db:
         result = await db.execute(
-            select(Session)
-            .where(Session.user_id == user_id)
-            .order_by(Session.updated_at.desc())
+            select(Session).where(Session.user_id == user_id).order_by(Session.updated_at.desc())
         )
         return list(result.scalars().all())
 
@@ -211,7 +210,7 @@ async def chat_stream(
         model: Model to use (defaults to session's model)
     """
     start_time = time.time()
-    
+
     # Get session to determine model if not provided
     if model is None:
         session = await get_session(session_id)
@@ -260,11 +259,11 @@ async def chat_with_agent(
 ) -> AsyncIterator[dict]:
     """
     Streaming chat with full agent support (tool calling via MCP).
-    
+
     Tools are fetched from the local MCP server and called via MCP protocol.
     Uses astream with stream_mode="messages" to get streaming content,
     tool calls, and token usage in real-time.
-    
+
     Yields dicts with keys:
     - type: "content" | "tool_call" | "tool_result" | "usage" | "done" | "error"
     - data: The corresponding data
@@ -309,7 +308,7 @@ async def chat_with_agent(
     thinking_tokens = 0
     cache_read_tokens = 0
     current_tool_calls = {}  # Track tool calls by ID
-    
+
     try:
         # Use stream_mode="messages" for streaming content chunks
         async for event in agent.astream(
@@ -321,7 +320,7 @@ async def chat_with_agent(
                 chunk, metadata = event
             else:
                 chunk = event
-            
+
             # Handle ToolMessage (tool results) - check this FIRST before content
             if isinstance(chunk, ToolMessage):
                 tool_result = {
@@ -330,17 +329,17 @@ async def chat_with_agent(
                     "result": chunk.content,
                 }
                 yield {"type": "tool_result", "data": tool_result}
-                
+
                 # Update tool_calls_data with result
                 if chunk.tool_call_id in current_tool_calls:
                     current_tool_calls[chunk.tool_call_id]["result"] = chunk.content
                 continue
-            
+
             # Handle AIMessageChunk (streaming content and tool calls)
             if hasattr(chunk, "content") and chunk.content:
                 full_response += chunk.content
                 yield {"type": "content", "data": chunk.content}
-            
+
             # Handle tool call chunks
             if hasattr(chunk, "tool_calls") and chunk.tool_calls:
                 for tc in chunk.tool_calls:
@@ -353,42 +352,45 @@ async def chat_with_agent(
                                 "id": tool_id,
                             }
                             yield {"type": "tool_call", "data": current_tool_calls[tool_id]}
-            
+
             # Handle usage metadata
             if hasattr(chunk, "usage_metadata") and chunk.usage_metadata:
                 usage = chunk.usage_metadata
                 input_tokens += usage.get("input_tokens", 0)
                 output_tokens += usage.get("output_tokens", 0)
                 total_tokens += usage.get("total_tokens", 0)
-                
+
                 # Extract detailed token info (OpenAI specific)
                 input_details = usage.get("input_token_details", {})
                 output_details = usage.get("output_token_details", {})
                 cache_read = input_details.get("cache_read", 0) if input_details else 0
                 reasoning = output_details.get("reasoning", 0) if output_details else 0
-                
+
                 cache_read_tokens += cache_read
                 thinking_tokens += reasoning
-                
-                yield {"type": "usage", "data": {
-                    "input_tokens": usage.get("input_tokens", 0),
-                    "output_tokens": usage.get("output_tokens", 0),
-                    "total_tokens": usage.get("total_tokens", 0),
-                    "thinking_tokens": reasoning,
-                    "cache_read_tokens": cache_read,
-                }}
-        
+
+                yield {
+                    "type": "usage",
+                    "data": {
+                        "input_tokens": usage.get("input_tokens", 0),
+                        "output_tokens": usage.get("output_tokens", 0),
+                        "total_tokens": usage.get("total_tokens", 0),
+                        "thinking_tokens": reasoning,
+                        "cache_read_tokens": cache_read,
+                    },
+                }
+
         if not full_response:
             full_response = "No response generated."
             yield {"type": "content", "data": full_response}
-            
+
     except Exception as e:
         logger.exception(f"Agent error: {e}")
         full_response = f"Error: {str(e)}"
         yield {"type": "error", "data": str(e)}
 
     latency_ms = int((time.time() - start_time) * 1000)
-    
+
     # Convert current_tool_calls to list
     tool_calls_list = list(current_tool_calls.values()) if current_tool_calls else None
 
@@ -407,11 +409,14 @@ async def chat_with_agent(
     )
 
     # Signal completion
-    yield {"type": "done", "data": {
-        "latency_ms": latency_ms,
-        "input_tokens": input_tokens,
-        "output_tokens": output_tokens,
-        "total_tokens": total_tokens,
-        "thinking_tokens": thinking_tokens,
-        "cache_read_tokens": cache_read_tokens,
-    }}
+    yield {
+        "type": "done",
+        "data": {
+            "latency_ms": latency_ms,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": total_tokens,
+            "thinking_tokens": thinking_tokens,
+            "cache_read_tokens": cache_read_tokens,
+        },
+    }

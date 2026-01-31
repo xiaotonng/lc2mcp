@@ -87,3 +87,8 @@ testpaths = ["tests"]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.14",
+]

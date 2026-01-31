@@ -1,7 +1,7 @@
 """Image generation tool using OpenAI's gpt-image-1.5."""
 
-from langchain_core.tools import tool
 from langchain.tools import ToolRuntime
+from langchain_core.tools import tool
 from openai import OpenAI
 
 from lc2mcp_community.context import ChatContext, get_context
